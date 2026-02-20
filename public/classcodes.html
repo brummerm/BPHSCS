@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Codes – Computer Science</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #0d1117; --surface: #161b22; --surface2:#1c2128;
+      --border:  #30363d; --text:    #e6edf3; --muted:   #8b949e;
+      --green:   #3fb950; --blue:    #58a6ff; --purple:  #bc8cff;
+      --red:     #f85149; --yellow:  #e3b341;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+    .banner { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .banner a { display: block; }
+    .banner img { width: 100%; max-height: 160px; object-fit: cover; display: block; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    nav ul { display: flex; list-style: none; justify-content: center; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+    nav li { padding: 0; }
+    nav a { display: block; color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; padding: 0.85rem 0.9rem; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
+    nav a:hover { color: var(--text); }
+    nav a.active { color: var(--text); border-bottom-color: var(--green); }
+    nav a.ide-link { color: var(--green); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.8rem; background: rgba(63,185,80,0.1); border-radius: 6px; margin: 0.5rem 0.4rem; padding: 0.35rem 0.8rem; border-bottom: none; }
+    nav a.ide-link:hover { background: rgba(63,185,80,0.2); }
+    main { flex: 1; max-width: 900px; width: 100%; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; color: var(--text); margin-bottom: 0.25rem; }
+    .page-header p { color: var(--muted); font-size: 0.875rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; transition: border-color 0.15s, transform 0.15s;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card-top { height: 4px; }
+    .red    { background: var(--red); border-color: var(--red); }
+    .yellow { background: var(--yellow); border-color: var(--yellow); }
+    .green  { background: var(--green); border-color: var(--green); }
+    .blue   { background: var(--blue); border-color: var(--blue); }
+    .purple { background: var(--purple); border-color: var(--purple); }
+    .card:has(.red)    { border-color: rgba(248,81,73,0.3); }
+    .card:has(.yellow) { border-color: rgba(227,179,65,0.3); }
+    .card:has(.green)  { border-color: rgba(63,185,80,0.3); }
+    .card:has(.blue)   { border-color: rgba(88,166,255,0.3); }
+    .card:has(.purple) { border-color: rgba(188,140,255,0.3); }
+    .card-body { padding: 1.25rem; }
+    .period-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem; font-weight: 700; color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+    .code-block {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.6rem 0.9rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem; color: var(--green);
+      margin-bottom: 1rem; display: flex;
+      align-items: center; justify-content: space-between;
+    }
+    .copy-btn {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 0.8rem; padding: 0.2rem 0.4rem;
+      border-radius: 4px; transition: color 0.15s, background 0.15s;
+    }
+    .copy-btn:hover { color: var(--text); background: var(--border); }
+    .join-btn {
+      display: block; text-align: center; text-decoration: none;
+      font-size: 0.85rem; font-weight: 600;
+      padding: 0.55rem 1rem; border-radius: 6px;
+      border: 1px solid var(--border); color: var(--text);
+      background: var(--surface2); transition: background 0.15s, border-color 0.15s;
+    }
+    .join-btn:hover { background: var(--border); }
+    footer { background: var(--surface); border-top: 1px solid var(--border); text-align: center; padding: 1.5rem; color: var(--muted); font-size: 0.8rem; }
+    footer a { color: var(--blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer .brand { font-family: 'JetBrains Mono', monospace; color: var(--green); font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; }
+    @media (max-width: 640px) { nav ul { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; } .cards { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <a href="/index.html"><img src="/Images/banner.jpg" alt="Computer Science Course Banner"></a>
+  </div>
+  <nav aria-label="Main navigation">
+    <ul>
+      <li><a href="/index.html">Home</a></li>
+      <li><a href="/Syllabus.html">Syllabus</a></li>
+      <li><a href="/Resources.html">Resources</a></li>
+      <li><a href="/showcase.html">Showcase</a></li>
+      <li><a href="/coding-examples.html">Coding Examples</a></li>
+      <li><a href="/classcodes.html" class="active">Class Codes</a></li>
+      <li><a href="/Login.html" class="ide-link">💻 Classroom IDE</a></li>
+    </ul>
+  </nav>
+  <main>
+    <div class="page-header">
+      <h1>// Google Classroom Codes</h1>
+      <p>Select your class period and click "Join Class" to join your Google Classroom.</p>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-top red"></div>
+        <div class="card-body">
+          <div class="period-label">🔴 Red Period</div>
+          <div class="code-block">
+            <span id="code-red">osskwomb</span>
+            <button class="copy-btn" onclick="copyCode('code-red', this)" title="Copy code">⎘</button>
+          </div>
+          <a href="https://classroom.google.com/c/ODAxMjkwMTczOTAx?cjc=osskwomb" class="join-btn" target="_blank" rel="noopener">Join Class →</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-top yellow"></div>
+        <div class="card-body">
+          <div class="period-label">🟡 Yellow Period</div>
+          <div class="code-block">
+            <span id="code-yellow">ncsochzp</span>
+            <button class="copy-btn" onclick="copyCode('code-yellow', this)" title="Copy code">⎘</button>
+          </div>
+          <a href="https://classroom.google.com/c/Nzc1MjY4MDA2ODkx?cjc=ncsochzp" class="join-btn" target="_blank" rel="noopener">Join Class →</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-top green"></div>
+        <div class="card-body">
+          <div class="period-label">🟢 Green Period</div>
+          <div class="code-block">
+            <span id="code-green">kd62ljdi</span>
+            <button class="copy-btn" onclick="copyCode('code-green', this)" title="Copy code">⎘</button>
+          </div>
+          <a href="https://classroom.google.com/c/Nzc1MjY4MjEyNjk4?cjc=kd62ljdi" class="join-btn" target="_blank" rel="noopener">Join Class →</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-top blue"></div>
+        <div class="card-body">
+          <div class="period-label">🔵 Blue Period</div>
+          <div class="code-block">
+            <span id="code-blue">axcihqw3</span>
+            <button class="copy-btn" onclick="copyCode('code-blue', this)" title="Copy code">⎘</button>
+          </div>
+          <a href="https://classroom.google.com/c/ODAxMjkwMjIxODAw?cjc=axcihqw3" class="join-btn" target="_blank" rel="noopener">Join Class →</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-top purple"></div>
+        <div class="card-body">
+          <div class="period-label">🟣 Purple Period</div>
+          <div class="code-block">
+            <span id="code-purple">ir4pmdqj</span>
+            <button class="copy-btn" onclick="copyCode('code-purple', this)" title="Copy code">⎘</button>
+          </div>
+          <a href="https://classroom.google.com/c/Nzc1MjY2MjI0NjUz?cjc=ir4pmdqj" class="join-btn" target="_blank" rel="noopener">Join Class →</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+  <footer>
+    <div class="brand">💻 CS @ BPHS</div>
+    <p>Instructor: Mr. Brummer &nbsp;·&nbsp; <a href="mailto:mbrummer@schools.nyc.gov">mbrummer@schools.nyc.gov</a></p>
+    <p style="margin-top:0.4rem">&copy; <span id="yr"></span> Computer Science</p>
+  </footer>
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    function copyCode(id, btn) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓';
+        btn.style.color = 'var(--green)';
+        setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
+      });
+    }
+    const page = location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('nav a:not(.ide-link)').forEach(a => {
+      if (a.getAttribute('href') === page) a.classList.add('active');
+      else a.classList.remove('active');
+    });
+  </script>
+</body>
+</html>

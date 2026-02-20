@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Showcase – Computer Science</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;
+      --border:#30363d;--text:#e6edf3;--muted:#8b949e;
+      --green:#3fb950;--blue:#58a6ff;--purple:#bc8cff;
+      --red:#f85149;--yellow:#e3b341;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+    .banner{background:var(--surface);border-bottom:1px solid var(--border);}
+    .banner a{display:block;}
+    .banner img{width:100%;max-height:160px;object-fit:cover;display:block;}
+    nav{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+    nav ul{display:flex;list-style:none;justify-content:center;flex-wrap:wrap;max-width:1200px;margin:0 auto;padding:0 1rem;}
+    nav li{padding:0;}
+    nav a{display:block;color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;padding:.85rem .9rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+    nav a:hover{color:var(--text);}
+    nav a.active{color:var(--text);border-bottom-color:var(--green);}
+    nav a.ide-link{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.8rem;background:rgba(63,185,80,.1);border-radius:6px;margin:.5rem .4rem;padding:.35rem .8rem;border-bottom:none;}
+    nav a.ide-link:hover{background:rgba(63,185,80,.2);}
+    main{flex:1;max-width:1200px;width:100%;margin:0 auto;padding:2rem 1.5rem;}
+    .page-header{margin-bottom:1.5rem;}
+    .page-header h1{font-family:'JetBrains Mono',monospace;font-size:1.4rem;color:var(--text);margin-bottom:.25rem;}
+    .page-header p{color:var(--muted);font-size:.875rem;}
+
+    /* Controls */
+    .controls{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;}
+    .filter-btn{background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:.8rem;font-weight:500;padding:.4rem .9rem;cursor:pointer;transition:all .15s;}
+    .filter-btn:hover{color:var(--text);border-color:var(--muted);}
+    .filter-btn.active{background:rgba(88,166,255,.1);border-color:var(--blue);color:var(--blue);}
+    .search-row{display:flex;gap:.5rem;margin-bottom:1.5rem;}
+    .search-row input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.55rem .9rem;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:.875rem;outline:none;}
+    .search-row input:focus{border-color:var(--blue);}
+    .search-row input::placeholder{color:var(--muted);}
+    .search-row button{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.55rem 1rem;font-size:.875rem;cursor:pointer;transition:background .15s;}
+    .search-row button:hover{background:var(--border);}
+
+    /* Grid */
+    .projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;}
+    .project-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s;}
+    .project-card:hover{border-color:var(--blue);transform:translateY(-2px);}
+    .project-img{height:160px;background:var(--surface2);position:relative;display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
+    .project-cat{position:absolute;top:8px;right:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;font-size:.72rem;font-weight:600;padding:.2rem .5rem;color:var(--muted);}
+    .project-body{padding:1rem;flex:1;display:flex;flex-direction:column;}
+    .project-title{font-family:'JetBrains Mono',monospace;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.2rem;}
+    .project-student{font-size:.8rem;color:var(--muted);margin-bottom:.6rem;}
+    .project-desc{font-size:.82rem;color:var(--muted);line-height:1.6;flex:1;margin-bottom:.75rem;}
+    .project-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.75rem;}
+    .tag{background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;font-size:.72rem;padding:.15rem .5rem;}
+    .project-actions{display:flex;justify-content:space-between;align-items:center;margin-top:auto;}
+    .view-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--blue);font-size:.8rem;font-weight:600;padding:.35rem .8rem;cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s;}
+    .view-btn:hover{background:rgba(88,166,255,.1);border-color:var(--blue);}
+    .like-btn{background:none;border:none;color:var(--muted);font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;transition:color .15s;}
+    .like-btn:hover,.like-btn.liked{color:var(--red);}
+    .empty{text-align:center;padding:3rem;color:var(--muted);display:none;}
+    .empty h3{font-family:'JetBrains Mono',monospace;font-size:1rem;margin-bottom:.5rem;color:var(--text);}
+
+    footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:1.5rem;color:var(--muted);font-size:.8rem;}
+    footer a{color:var(--blue);text-decoration:none;}
+    footer a:hover{text-decoration:underline;}
+    footer .brand{font-family:'JetBrains Mono',monospace;color:var(--green);font-size:.85rem;font-weight:700;margin-bottom:.4rem;}
+    @media(max-width:640px){nav ul{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;}.projects-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <a href="/index.html"><img src="/Images/banner.jpg" alt="Computer Science Course Banner"></a>
+  </div>
+  <nav aria-label="Main navigation">
+    <ul>
+      <li><a href="/index.html">Home</a></li>
+      <li><a href="/Syllabus.html">Syllabus</a></li>
+      <li><a href="/Resources.html">Resources</a></li>
+      <li><a href="/showcase.html" class="active">Showcase</a></li>
+      <li><a href="/coding-examples.html">Coding Examples</a></li>
+      <li><a href="/classcodes.html">Class Codes</a></li>
+      <li><a href="/Login.html" class="ide-link">💻 Classroom IDE</a></li>
+    </ul>
+  </nav>
+  <main>
+    <div class="page-header">
+      <h1>// Student Showcase</h1>
+      <p>Explore projects created by students — from Python apps to 3D models and electronics.</p>
+    </div>
+
+    <div class="controls" id="filters">
+      <button class="filter-btn active" data-cat="all">All Projects</button>
+      <button class="filter-btn" data-cat="programming">Programming</button>
+      <button class="filter-btn" data-cat="cryptography">Cryptography</button>
+      <button class="filter-btn" data-cat="3dmodel">3D Modeling</button>
+      <button class="filter-btn" data-cat="computers">Computer Repair</button>
+      <button class="filter-btn" data-cat="electronics">Electronics</button>
+    </div>
+
+    <div class="search-row">
+      <input type="text" id="search-input" placeholder="Search projects...">
+      <button id="search-btn">Search</button>
+    </div>
+
+    <div class="projects-grid" id="projects"></div>
+    <div class="empty" id="empty"><h3>No projects found</h3><p>Try adjusting your filters or search.</p></div>
+  </main>
+  <footer>
+    <div class="brand">💻 CS @ BPHS</div>
+    <p>Instructor: Mr. Brummer &nbsp;·&nbsp; <a href="mailto:mbrummer@schools.nyc.gov">mbrummer@schools.nyc.gov</a></p>
+    <p style="margin-top:.4rem">&copy; <span id="yr"></span> Computer Science</p>
+  </footer>
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    const ICONS = { programming:'🐍', cryptography:'🔐', '3dmodel':'🖨️', computers:'🖥️', electronics:'⚡' };
+    const CAT_COLORS = { programming:'var(--blue)', cryptography:'var(--purple)', '3dmodel':'var(--yellow)', computers:'var(--muted)', electronics:'var(--green)' };
+
+    const projects = [
+      { id:1, title:"Python Weather App", student:"Emma Johnson", desc:"A Python application that fetches and displays real-time weather data using APIs.", cat:"programming", tags:["Python","APIs","GUI"], likes:15 },
+      { id:2, title:"E-commerce Website", student:"Michael Chen", desc:"Fully responsive e-commerce site with shopping cart functionality built with HTML, CSS, and JavaScript.", cat:"programming", tags:["HTML/CSS","JavaScript","UI/UX"], likes:23 },
+      { id:3, title:"Caesar Cipher Decoder", student:"Alex Smith", desc:"An application that encodes and decodes messages using the Caesar cipher with adjustable shift values.", cat:"cryptography", tags:["Cryptography","Python","Algorithms"], likes:8 },
+      { id:4, title:"3D Printed Phone Stand", student:"Sarah Williams", desc:"A custom-designed phone stand optimized for stability and adjustable viewing angles.", cat:"3dmodel", tags:["3D Printing","CAD","Product Design"], likes:19 },
+      { id:5, title:"Arduino Smart Plant Monitor", student:"David Lee", desc:"An Arduino-based system that monitors soil moisture, light, and temperature for houseplants.", cat:"electronics", tags:["Arduino","Sensors","IoT"], likes:31 },
+      { id:6, title:"Gaming PC Build Guide", student:"Jessica Brown", desc:"Comprehensive documentation of a custom gaming PC build including component selection and assembly.", cat:"computers", tags:["PC Building","Hardware","Documentation"], likes:27 }
+    ];
+
+    let liked = JSON.parse(localStorage.getItem('liked') || '[]');
+    let currentCat = 'all';
+    let currentSearch = '';
+
+    function render() {
+      const grid = document.getElementById('projects');
+      const filtered = projects.filter(p => {
+        const catOk = currentCat === 'all' || p.cat === currentCat;
+        const searchOk = !currentSearch || p.title.toLowerCase().includes(currentSearch) || p.student.toLowerCase().includes(currentSearch) || p.tags.some(t => t.toLowerCase().includes(currentSearch));
+        return catOk && searchOk;
+      });
+      document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
+      grid.innerHTML = filtered.map(p => `
+        <div class="project-card" data-id="${p.id}">
+          <div class="project-img" style="border-bottom:2px solid ${CAT_COLORS[p.cat] || 'var(--border)'}">
+            <span>${ICONS[p.cat] || '📁'}</span>
+            <span class="project-cat">${p.cat}</span>
+          </div>
+          <div class="project-body">
+            <div class="project-title">${p.title}</div>
+            <div class="project-student">by ${p.student}</div>
+            <div class="project-desc">${p.desc}</div>
+            <div class="project-tags">${p.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+            <div class="project-actions">
+              <span class="view-btn">View Project</span>
+              <button class="like-btn ${liked.includes(p.id)?'liked':''}" onclick="toggleLike(${p.id}, this)">
+                ${liked.includes(p.id)?'♥':'♡'} <span>${p.likes + (liked.includes(p.id)?1:0)}</span>
+              </button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    function toggleLike(id, btn) {
+      const idx = liked.indexOf(id);
+      const p = projects.find(x => x.id === id);
+      if (idx === -1) { liked.push(id); btn.classList.add('liked'); btn.innerHTML = `♥ <span>${p.likes+1}</span>`; }
+      else { liked.splice(idx,1); btn.classList.remove('liked'); btn.innerHTML = `♡ <span>${p.likes}</span>`; }
+      localStorage.setItem('liked', JSON.stringify(liked));
+    }
+
+    document.getElementById('filters').addEventListener('click', e => {
+      if (!e.target.dataset.cat) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      currentCat = e.target.dataset.cat;
+      render();
+    });
+    document.getElementById('search-btn').addEventListener('click', () => { currentSearch = document.getElementById('search-input').value.trim().toLowerCase(); render(); });
+    document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') { currentSearch = e.target.value.trim().toLowerCase(); render(); } });
+
+    render();
+    const page = location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('nav a:not(.ide-link)').forEach(a => {
+      if (a.getAttribute('href') === page) a.classList.add('active');
+      else a.classList.remove('active');
+    });
+  </script>
+</body>
+</html>

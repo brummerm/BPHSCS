@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syllabus – Computer Science</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #0d1117; --surface: #161b22; --surface2:#1c2128;
+      --border:  #30363d; --text:    #e6edf3; --muted:   #8b949e;
+      --green:   #3fb950; --blue:    #58a6ff; --purple:  #bc8cff;
+      --red:     #f85149; --yellow:  #e3b341;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+    .banner { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .banner a { display: block; }
+    .banner img { width: 100%; max-height: 160px; object-fit: cover; display: block; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    nav ul { display: flex; list-style: none; justify-content: center; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+    nav li { padding: 0; }
+    nav a { display: block; color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; padding: 0.85rem 0.9rem; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
+    nav a:hover { color: var(--text); }
+    nav a.active { color: var(--text); border-bottom-color: var(--green); }
+    nav a.ide-link { color: var(--green); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.8rem; background: rgba(63,185,80,0.1); border-radius: 6px; margin: 0.5rem 0.4rem; padding: 0.35rem 0.8rem; border-bottom: none; }
+    nav a.ide-link:hover { background: rgba(63,185,80,0.2); }
+    main { flex: 1; max-width: 900px; width: 100%; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; color: var(--text); margin-bottom: 0.25rem; }
+    .page-header p { color: var(--muted); font-size: 0.85rem; }
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; cursor: pointer; user-select: none; }
+    .section-header:hover { background: var(--surface2); }
+    .section-header h2 { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 700; color: var(--blue); }
+    .section-header .chevron { color: var(--muted); font-size: 0.9rem; transition: transform 0.2s; }
+    .section.open .chevron { transform: rotate(90deg); }
+    .section-body { padding: 0 1.25rem; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; }
+    .section.open .section-body { max-height: 2000px; padding: 0.25rem 1.25rem 1.25rem; }
+    .section-body p { color: var(--muted); font-size: 0.875rem; line-height: 1.7; margin-bottom: 0.6rem; }
+    .section-body p strong { color: var(--text); }
+    .sub-section { margin-top: 1rem; margin-bottom: 0.5rem; }
+    .sub-section h3 { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--green); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .item-list { list-style: none; padding: 0; }
+    .item-list li { font-size: 0.875rem; color: var(--muted); padding: 0.3rem 0; padding-left: 1rem; position: relative; line-height: 1.6; }
+    .item-list li::before { content: '›'; position: absolute; left: 0; color: var(--blue); }
+    .grading-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-top: 0.5rem; }
+    .grade-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; text-align: center; }
+    .grade-item .pct { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 700; color: var(--green); }
+    .grade-item .label { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+    footer { background: var(--surface); border-top: 1px solid var(--border); text-align: center; padding: 1.5rem; color: var(--muted); font-size: 0.8rem; }
+    footer a { color: var(--blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer .brand { font-family: 'JetBrains Mono', monospace; color: var(--green); font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; }
+    @media (max-width: 640px) { nav ul { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; } }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <a href="/index.html"><img src="/Images/banner.jpg" alt="Computer Science Course Banner"></a>
+  </div>
+  <nav aria-label="Main navigation">
+    <ul>
+      <li><a href="/index.html">Home</a></li>
+      <li><a href="/Syllabus.html" class="active">Syllabus</a></li>
+      <li><a href="/Resources.html">Resources</a></li>
+      <li><a href="/showcase.html">Showcase</a></li>
+      <li><a href="/coding-examples.html">Coding Examples</a></li>
+      <li><a href="/classcodes.html">Class Codes</a></li>
+      <li><a href="/Login.html" class="ide-link">💻 Classroom IDE</a></li>
+    </ul>
+  </nav>
+  <main>
+    <div class="page-header">
+      <h1>// Course Syllabus</h1>
+      <p>Brooklyn Preparatory High School · Mr. Brummer</p>
+    </div>
+
+    <div class="section open" id="s1">
+      <div class="section-header" onclick="toggle('s1')">
+        <h2>Course Description</h2>
+        <span class="chevron">›</span>
+      </div>
+      <div class="section-body">
+        <p>This year-long course integrates various programming languages to be utilized in STEM applications, emphasizing mathematical concepts throughout. Students will develop computational thinking skills while exploring how programming connects to fields such as electronics, cryptography, 3D modeling, and web development.</p>
+        <p>Through project-based learning, students will develop technical skills relevant to various career pathways while reinforcing and applying mathematical principles.</p>
+      </div>
+    </div>
+
+    <div class="section" id="s2">
+      <div class="section-header" onclick="toggle('s2')">
+        <h2>Required Materials</h2>
+        <span class="chevron">›</span>
+      </div>
+      <div class="section-body">
+        <ul class="item-list">
+          <li>Laptop</li>
+          <li>Laptop charger</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section" id="s3">
+      <div class="section-header" onclick="toggle('s3')">
+        <h2>Educational Goals &amp; Outcomes</h2>
+        <span class="chevron">›</span>
+      </div>
+      <div class="section-body">
+        <div class="sub-section">
+          <h3>Technical Skills</h3>
+          <ul class="item-list">
+            <li>Write, test, and debug programs of varying complexity</li>
+            <li>Implement data structures for information management</li>
+            <li>Apply programming concepts to control microcontrollers and hardware</li>
+            <li>Understand and implement cryptographic concepts using Python</li>
+            <li>Create 3D models using computational approaches</li>
+            <li>Develop basic web pages using HTML and CSS</li>
+            <li>Integrate Python across multiple STEM domains</li>
+          </ul>
+        </div>
+        <div class="sub-section">
+          <h3>Mathematical Competencies</h3>
+          <ul class="item-list">
+            <li>Apply algebraic concepts in programming contexts</li>
+            <li>Implement geometric principles through 3D modeling</li>
+            <li>Utilize number theory in cryptography applications</li>
+            <li>Apply statistical methods for data analysis</li>
+            <li>Model mathematical relationships through code</li>
+          </ul>
+        </div>
+        <div class="sub-section">
+          <h3>21st Century Skills</h3>
+          <ul class="item-list">
+            <li>Apply computational thinking to complex problems</li>
+            <li>Communicate technical concepts effectively</li>
+            <li>Collaborate on interdisciplinary projects</li>
+            <li>Research independently to extend learning</li>
+            <li>Develop creative technology solutions</li>
+            <li>Evaluate ethical implications of technology</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="s4">
+      <div class="section-header" onclick="toggle('s4')">
+        <h2>Academic Integrity Policy</h2>
+        <span class="chevron">›</span>
+      </div>
+      <div class="section-body">
+        <p><strong>Academic integrity is crucial in computer science.</strong> Students are expected to complete their own work and properly attribute any external sources or collaboration.</p>
+        <div class="sub-section">
+          <h3>Examples of Academic Dishonesty</h3>
+          <ul class="item-list">
+            <li>Copying code from another student or online source</li>
+            <li>Sharing solutions to assignments</li>
+            <li>Unauthorized collaboration on individual assignments</li>
+            <li>Using AI tools or code generators without permission</li>
+          </ul>
+        </div>
+        <p>Students are encouraged to seek help from the teacher, TAs, or peer tutoring if they are struggling with course material.</p>
+      </div>
+    </div>
+
+    <div class="section" id="s5">
+      <div class="section-header" onclick="toggle('s5')">
+        <h2>Classroom Expectations</h2>
+        <span class="chevron">›</span>
+      </div>
+      <div class="section-body">
+        <p><strong>Attendance:</strong> Regular attendance is vital. Students are responsible for material covered in their absence.</p>
+        <p><strong>Participation:</strong> Active engagement in discussions, pair programming, and group activities is expected.</p>
+        <p><strong>Respect:</strong> Treat classmates, teachers, and equipment with respect. Harassment or bullying will not be tolerated.</p>
+        <p><strong>Technology Use:</strong> Computers are for classwork only. No gaming, social media, or non-course-related browsing during class.</p>
+        <p><strong>Preparedness:</strong> Come to class on time with all required materials.</p>
+      </div>
+    </div>
+
+    <div class="section" id="s6">
+      <div class="section-header" onclick="toggle('s6')">
+        <h2>Grading</h2>
+        <span class="chevron">›</span>
+      </div>
+      <div class="section-body">
+        <div class="grading-grid">
+          <div class="grade-item"><div class="pct">50%</div><div class="label">Weekly Assignments</div></div>
+          <div class="grade-item"><div class="pct">20%</div><div class="label">Projects</div></div>
+          <div class="grade-item"><div class="pct">30%</div><div class="label">Participation</div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  <footer>
+    <div class="brand">💻 CS @ BPHS</div>
+    <p>Instructor: Mr. Brummer &nbsp;·&nbsp; <a href="mailto:mbrummer@schools.nyc.gov">mbrummer@schools.nyc.gov</a></p>
+    <p style="margin-top:0.4rem">&copy; <span id="yr"></span> Computer Science</p>
+  </footer>
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    function toggle(id) {
+      document.getElementById(id).classList.toggle('open');
+    }
+    const page = location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('nav a:not(.ide-link)').forEach(a => {
+      if (a.getAttribute('href') === page) a.classList.add('active');
+      else a.classList.remove('active');
+    });
+  </script>
+</body>
+</html>

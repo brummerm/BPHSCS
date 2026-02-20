@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coding Examples – Computer Science</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;
+      --border:#30363d;--text:#e6edf3;--muted:#8b949e;
+      --green:#3fb950;--blue:#58a6ff;--purple:#bc8cff;
+      --red:#f85149;--yellow:#e3b341;--orange:#f0883e;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+    .banner{background:var(--surface);border-bottom:1px solid var(--border);}
+    .banner a{display:block;}
+    .banner img{width:100%;max-height:160px;object-fit:cover;display:block;}
+    nav{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+    nav ul{display:flex;list-style:none;justify-content:center;flex-wrap:wrap;max-width:1200px;margin:0 auto;padding:0 1rem;}
+    nav li{padding:0;}
+    nav a{display:block;color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;padding:.85rem .9rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+    nav a:hover{color:var(--text);}
+    nav a.active{color:var(--text);border-bottom-color:var(--green);}
+    nav a.ide-link{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.8rem;background:rgba(63,185,80,.1);border-radius:6px;margin:.5rem .4rem;padding:.35rem .8rem;border-bottom:none;}
+    nav a.ide-link:hover{background:rgba(63,185,80,.2);}
+    main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:2rem 1.5rem;}
+    .page-header{margin-bottom:1.5rem;}
+    .page-header h1{font-family:'JetBrains Mono',monospace;font-size:1.4rem;color:var(--text);margin-bottom:.25rem;}
+    .page-header p{color:var(--muted);font-size:.875rem;}
+
+    /* Layout */
+    .ide-layout{display:grid;grid-template-columns:220px 1fr;gap:1rem;height:calc(100vh - 260px);min-height:500px;}
+
+    /* Sidebar */
+    .sidebar{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow-y:auto;}
+    .sidebar-section{padding:.5rem 0;}
+    .sidebar-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:.4rem .9rem;display:flex;align-items:center;gap:.4rem;}
+    .sidebar-label::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;}
+    .sidebar-label.python::before{background:var(--blue);}
+    .sidebar-label.html-label::before{background:var(--orange);}
+    .sidebar-item{display:flex;align-items:center;gap:.5rem;padding:.4rem .9rem;font-size:.82rem;color:var(--muted);cursor:pointer;transition:background .1s,color .1s;border-left:2px solid transparent;}
+    .sidebar-item:hover{background:var(--surface2);color:var(--text);}
+    .sidebar-item.active{background:rgba(88,166,255,.1);color:var(--blue);border-left-color:var(--blue);}
+    .sidebar-item .item-icon{font-size:.9rem;}
+
+    /* Code area */
+    .code-area{background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;}
+    .code-topbar{display:flex;align-items:center;gap:.75rem;padding:.55rem .9rem;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;}
+    .file-tab{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:.2rem .65rem;}
+    .file-tab.active{color:var(--text);border-color:var(--blue);}
+    .copy-btn{margin-left:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:.78rem;font-family:'IBM Plex Sans',sans-serif;padding:.3rem .7rem;cursor:pointer;transition:all .15s;}
+    .copy-btn:hover{color:var(--text);border-color:var(--muted);}
+    .copy-btn.copied{color:var(--green);border-color:var(--green);}
+    .desc-bar{padding:.75rem 1rem;background:var(--bg);border-bottom:1px solid var(--border);font-size:.82rem;color:var(--muted);line-height:1.6;flex-shrink:0;}
+    .code-scroll{flex:1;overflow:auto;}
+    pre{margin:0;padding:1rem;}
+    code{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.7;color:var(--text);}
+    .placeholder{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.85rem;}
+
+    /* Syntax highlighting */
+    .kw{color:#ff7b72;}
+    .fn{color:#d2a8ff;}
+    .bi{color:#79c0ff;}
+    .st{color:#a5d6ff;}
+    .cm{color:var(--muted);font-style:italic;}
+    .nm{color:#f0883e;}
+    .ht{color:#7ee787;}
+    .ha{color:#d2a8ff;}
+    .hs{color:#a5d6ff;}
+    .hc{color:var(--muted);font-style:italic;}
+
+    footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:1.5rem;color:var(--muted);font-size:.8rem;}
+    footer a{color:var(--blue);text-decoration:none;}
+    footer a:hover{text-decoration:underline;}
+    footer .brand{font-family:'JetBrains Mono',monospace;color:var(--green);font-size:.85rem;font-weight:700;margin-bottom:.4rem;}
+    @media(max-width:768px){.ide-layout{grid-template-columns:1fr;height:auto;}.sidebar{height:180px;}.code-scroll{height:400px;}nav ul{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;}}
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <a href="/index.html"><img src="/Images/banner.jpg" alt="Computer Science Course Banner"></a>
+  </div>
+  <nav aria-label="Main navigation">
+    <ul>
+      <li><a href="/index.html">Home</a></li>
+      <li><a href="/Syllabus.html">Syllabus</a></li>
+      <li><a href="/Resources.html">Resources</a></li>
+      <li><a href="/showcase.html">Showcase</a></li>
+      <li><a href="/coding-examples.html" class="active">Coding Examples</a></li>
+      <li><a href="/classcodes.html">Class Codes</a></li>
+      <li><a href="/Login.html" class="ide-link">💻 Classroom IDE</a></li>
+    </ul>
+  </nav>
+  <main>
+    <div class="page-header">
+      <h1>// Code Examples</h1>
+      <p>Select an example to view annotated code snippets for Python and HTML.</p>
+    </div>
+    <div class="ide-layout">
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-label python">Python</div>
+          <div class="sidebar-item" data-id="hello-world"><span class="item-icon">🐍</span>Hello World</div>
+          <div class="sidebar-item" data-id="variables"><span class="item-icon">📦</span>Variables &amp; Types</div>
+          <div class="sidebar-item" data-id="conditionals"><span class="item-icon">🔀</span>Conditionals</div>
+          <div class="sidebar-item" data-id="loops"><span class="item-icon">🔁</span>Loops</div>
+          <div class="sidebar-item" data-id="functions"><span class="item-icon">⚙️</span>Functions</div>
+          <div class="sidebar-item" data-id="lists"><span class="item-icon">📋</span>Lists</div>
+          <div class="sidebar-item" data-id="dictionaries"><span class="item-icon">🗂️</span>Dictionaries</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label html-label">HTML</div>
+          <div class="sidebar-item" data-id="navbar"><span class="item-icon">🧭</span>Navigation Bar</div>
+          <div class="sidebar-item" data-id="gallery"><span class="item-icon">🖼️</span>Image Gallery</div>
+          <div class="sidebar-item" data-id="contact"><span class="item-icon">📬</span>Contact Form</div>
+          <div class="sidebar-item" data-id="action"><span class="item-icon">🚀</span>Hero Section</div>
+          <div class="sidebar-item" data-id="card"><span class="item-icon">🃏</span>Card Layout</div>
+        </div>
+      </div>
+      <div class="code-area">
+        <div class="code-topbar">
+          <span class="file-tab active" id="file-tab">Select an example →</span>
+          <button class="copy-btn" id="copy-btn" style="display:none">⎘ Copy</button>
+        </div>
+        <div class="desc-bar" id="desc-bar">Click an example from the sidebar to view annotated code.</div>
+        <div class="code-scroll">
+          <pre><code id="code-display" class="placeholder"># ← Select an example from the left sidebar</code></pre>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="brand">💻 CS @ BPHS</div>
+    <p>Instructor: Mr. Brummer &nbsp;·&nbsp; <a href="mailto:mbrummer@schools.nyc.gov">mbrummer@schools.nyc.gov</a></p>
+    <p style="margin-top:.4rem">&copy; <span id="yr"></span> Computer Science</p>
+  </footer>
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    const examples = {
+      'hello-world': {
+        file: 'hello_world.py', lang: 'python',
+        desc: "The classic 'Hello, World!' program — the traditional first program for learning any language.",
+        code: `# Simple Hello World program
+print("Hello, World!")
+
+# With a variable
+message = "Hello, Python World!"
+print(message)
+
+# Taking user input
+name = input("Enter your name: ")
+print(f"Hello, {name}!")`
+      },
+      'variables': {
+        file: 'variables.py', lang: 'python',
+        desc: "Examples of different Python data types and variable assignments.",
+        code: `# Integer
+count = 42
+print(f"Integer: {count}, Type: {type(count)}")
+
+# Float
+pi = 3.14159
+print(f"Float: {pi}, Type: {type(pi)}")
+
+# String
+name = "Python"
+print(f"String: {name}, Type: {type(name)}")
+
+# Boolean
+is_awesome = True
+print(f"Boolean: {is_awesome}, Type: {type(is_awesome)}")
+
+# List
+languages = ["Python", "Java", "JavaScript"]
+print(f"List: {languages}, Type: {type(languages)}")
+
+# Type conversion
+num_str = "123"
+num_int = int(num_str)
+print(f"Converted string to int: {num_int}, Type: {type(num_int)}")`
+      },
+      'conditionals': {
+        file: 'conditionals.py', lang: 'python',
+        desc: "Conditional statements (if, elif, else) allow you to execute code based on conditions.",
+        code: `# Basic if statement
+age = 18
+
+if age >= 18:
+    print("You are an adult")
+else:
+    print("You are a minor")
+
+# if-elif-else chain
+score = 85
+
+if score >= 90:
+    grade = "A"
+elif score >= 80:
+    grade = "B"
+elif score >= 70:
+    grade = "C"
+elif score >= 60:
+    grade = "D"
+else:
+    grade = "F"
+
+print(f"Your grade is: {grade}")
+
+# Ternary conditional expression
+is_sunny = True
+activity = "go outside" if is_sunny else "stay indoors"
+print(f"You should {activity}")`
+      },
+      'loops': {
+        file: 'loops.py', lang: 'python',
+        desc: "Loops allow you to repeat code execution. Python has for and while loops.",
+        code: `# For loop with range
+print("Counting from 1 to 5:")
+for i in range(1, 6):
+    print(i)
+
+# For loop with list
+fruits = ["apple", "banana", "cherry"]
+for fruit in fruits:
+    print(f"I like {fruit}s")
+
+# While loop
+count = 0
+while count < 5:
+    print(f"Count is {count}")
+    count += 1
+
+# Break statement
+for i in range(1, 10):
+    if i == 6:
+        print("Breaking the loop at 6")
+        break
+    print(i)
+
+# Continue (skipping even numbers)
+for i in range(1, 10):
+    if i % 2 == 0:
+        continue
+    print(i)`
+      },
+      'functions': {
+        file: 'functions.py', lang: 'python',
+        desc: "Functions help organize code into reusable blocks. Python functions can have default and keyword arguments.",
+        code: `# Basic function
+def greet(name):
+    """This function greets the person passed in as a parameter"""
+    return f"Hello, {name}!"
+
+print(greet("Alice"))
+
+# Function with default parameter
+def power(base, exponent=2):
+    """Calculate the power of a number"""
+    return base ** exponent
+
+print(f"2^2 = {power(2)}")
+print(f"2^3 = {power(2, 3)}")
+
+# Function with multiple return values
+def get_dimensions():
+    width = 100
+    height = 50
+    return width, height
+
+width, height = get_dimensions()
+print(f"Width: {width}, Height: {height}")
+
+# *args - variable number of arguments
+def sum_all(*args):
+    total = 0
+    for num in args:
+        total += num
+    return total
+
+print(f"Sum: {sum_all(1, 2, 3, 4, 5)}")`
+      },
+      'lists': {
+        file: 'lists.py', lang: 'python',
+        desc: "Lists are ordered, mutable collections that can store different types of objects.",
+        code: `# Creating lists
+numbers = [1, 2, 3, 4, 5]
+mixed = [1, "Hello", 3.14, True]
+
+# Accessing elements
+print(f"First element: {numbers[0]}")
+print(f"Last element: {numbers[-1]}")
+print(f"Slice: {numbers[0:3]}")
+
+# List methods
+numbers.append(6)         # Add to end
+numbers.insert(0, 0)      # Insert at position
+popped = numbers.pop()    # Remove and return last
+numbers.remove(3)         # Remove specific value
+
+# Sorting
+unsorted = [3, 1, 4, 1, 5, 9]
+unsorted.sort()           # Sort in place
+print(f"Sorted: {unsorted}")
+
+sorted_copy = sorted([3,1,4])   # New sorted list
+
+# List comprehensions
+squares = [x**2 for x in range(1, 6)]
+print(f"Squares: {squares}")
+
+even_numbers = [x for x in range(1, 11) if x % 2 == 0]
+print(f"Evens: {even_numbers}")`
+      },
+      'dictionaries': {
+        file: 'dictionaries.py', lang: 'python',
+        desc: "Dictionaries are key-value pairs that allow fast lookup by key.",
+        code: `# Creating dictionaries
+student = {
+    "name": "Alice",
+    "age": 20,
+    "major": "Computer Science",
+    "gpa": 3.8
+}
+
+# Accessing values
+print(f"Name: {student['name']}")
+print(f"ID: {student.get('id', 'Not available')}")
+
+# Adding/updating items
+student["year"] = "Junior"
+student["age"] = 21
+
+# Removing items
+removed = student.pop("major")
+print(f"Removed: {removed}")
+
+# Checking keys
+if "name" in student:
+    print(f"Found: {student['name']}")
+
+# Looping
+for key, value in student.items():
+    print(f"{key}: {value}")
+
+# Dictionary comprehension
+squares = {x: x**2 for x in range(1, 6)}
+print(f"Squares: {squares}")`
+      },
+      'navbar': {
+        file: 'navbar.html', lang: 'html',
+        desc: "A simple HTML navigation bar with links and hover styles.",
+        code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Navigation Bar</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; }
+        nav { background-color: #333; padding: 10px 20px; }
+        nav ul { list-style: none; margin: 0; padding: 0; }
+        nav ul li { display: inline; margin-right: 20px; }
+        nav ul li a { color: white; text-decoration: none; }
+        nav ul li a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+    <h1>Welcome to My Website</h1>
+</body>
+</html>`
+      },
+      'gallery': {
+        file: 'gallery.html', lang: 'html',
+        desc: "An image gallery layout using HTML and CSS flexbox.",
+        code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Gallery</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px;
+        }
+        .gallery img {
+            width: calc(33.333% - 10px);
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Gallery</h1>
+    <div class="gallery">
+        <img src="https://via.placeholder.com/300" alt="Image 1">
+        <img src="https://via.placeholder.com/300" alt="Image 2">
+        <img src="https://via.placeholder.com/300" alt="Image 3">
+        <img src="https://via.placeholder.com/300" alt="Image 4">
+        <img src="https://via.placeholder.com/300" alt="Image 5">
+        <img src="https://via.placeholder.com/300" alt="Image 6">
+    </div>
+</body>
+</html>`
+      },
+      'contact': {
+        file: 'contact.html', lang: 'html',
+        desc: "A simple contact form layout using HTML with styled inputs.",
+        code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .contact-form {
+            max-width: 400px; margin: 20px auto;
+            padding: 20px; border: 1px solid #ccc; border-radius: 5px;
+        }
+        .contact-form label { display: block; margin-bottom: 5px; }
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%; padding: 10px; margin-bottom: 10px;
+            border-radius: 5px; border: 1px solid #ccc;
+        }
+        .contact-form button {
+            background-color: #333; color: white;
+            padding: 10px 15px; border: none; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Contact Us</h1>
+    <form class="contact-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <label for="message">Message:</label>
+        <textarea id="message" rows="4" required></textarea>
+        <button type="submit">Send Message</button>
+    </form>
+</body>
+</html>`
+      },
+      'action': {
+        file: 'hero.html', lang: 'html',
+        desc: "A hero section with a bold headline and call-to-action button.",
+        code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hero Section</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; }
+        .hero {
+            background-color: #3498db; color: white;
+            text-align: center; padding: 100px 20px;
+        }
+        .hero h1 { font-size: 3em; }
+        .hero p { font-size: 1.2em; }
+        .hero button {
+            background-color: #e74c3c; color: white;
+            padding: 15px 30px; border: none;
+            border-radius: 5px; font-size: 1.2em; cursor: pointer;
+        }
+        .hero button:hover { opacity: 0.85; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>Welcome to Our Website</h1>
+        <p>Your journey starts here.</p>
+        <button>Get Started</button>
+    </div>
+</body>
+</html>`
+      },
+      'card': {
+        file: 'cards.html', lang: 'html',
+        desc: "A responsive card layout using CSS flexbox.",
+        code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Responsive Card Layout</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; }
+        .card-container {
+            display: flex; flex-wrap: wrap;
+            gap: 20px; padding: 20px;
+        }
+        .card {
+            background: #fff; border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: calc(33.333% - 20px); padding: 20px;
+        }
+        .card img { max-width: 100%; border-radius: 5px; }
+        .card h3 { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Card Layout</h1>
+    <div class="card-container">
+        <div class="card">
+            <img src="https://via.placeholder.com/300" alt="Image">
+            <h3>Card Title 1</h3>
+            <p>Description of the first card.</p>
+        </div>
+        <div class="card">
+            <img src="https://via.placeholder.com/300" alt="Image">
+            <h3>Card Title 2</h3>
+            <p>Description of the second card.</p>
+        </div>
+        <div class="card">
+            <img src="https://via.placeholder.com/300" alt="Image">
+            <h3>Card Title 3</h3>
+            <p>Description of the third card.</p>
+        </div>
+    </div>
+</body>
+</html>`
+      }
+    };
+
+    function highlight(code, lang) {
+      const esc = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      if (lang === 'python') {
+        return esc
+          .replace(/(#.*)$/gm, '<span class="cm">$1</span>')
+          .replace(/\b(def|if|elif|else|for|while|in|return|import|from|as|class|try|except|finally|with|continue|break|pass|and|or|not|is|None|True|False|raise|yield|lambda|global|nonlocal)\b/g, '<span class="kw">$1</span>')
+          .replace(/"""[\s\S]*?"""|'''[\s\S]*?'''|"[^"]*"|'[^']*'/g, m => `<span class="st">${m}</span>`)
+          .replace(/\b(\d+\.?\d*)\b/g, '<span class="nm">$1</span>')
+          .replace(/\b(print|input|len|str|int|float|bool|list|dict|tuple|set|range|sorted|type|enumerate|zip|map|filter|sum|min|max|abs)\b/g, '<span class="bi">$1</span>')
+          .replace(/\bdef\s+([a-zA-Z_]\w*)/g, '<span class="kw">def</span> <span class="fn">$1</span>');
+      } else if (lang === 'html') {
+        return esc
+          .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="hc">$1</span>')
+          .replace(/(&lt;\/?)([\w-]+)/g, '<span class="ht">$1$2</span>')
+          .replace(/ ([\w-]+)=/g, ' <span class="ha">$1</span>=')
+          .replace(/"([^"]*)"/g, '"<span class="hs">$1</span>"');
+      }
+      return esc;
+    }
+
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        const ex = examples[item.dataset.id];
+        if (!ex) return;
+        document.getElementById('file-tab').textContent = ex.file;
+        document.getElementById('desc-bar').textContent = ex.desc;
+        const display = document.getElementById('code-display');
+        display.className = '';
+        display.innerHTML = highlight(ex.code, ex.lang);
+        const btn = document.getElementById('copy-btn');
+        btn.style.display = 'inline-block';
+        btn.textContent = '⎘ Copy';
+        btn.classList.remove('copied');
+        btn._rawCode = ex.code;
+      });
+    });
+
+    document.getElementById('copy-btn').addEventListener('click', function() {
+      if (!this._rawCode) return;
+      navigator.clipboard.writeText(this._rawCode).then(() => {
+        this.textContent = '✓ Copied!';
+        this.classList.add('copied');
+        setTimeout(() => { this.textContent = '⎘ Copy'; this.classList.remove('copied'); }, 2000);
+      });
+    });
+
+    const page = location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('nav a:not(.ide-link)').forEach(a => {
+      if (a.getAttribute('href') === page) a.classList.add('active');
+      else a.classList.remove('active');
+    });
+  </script>
+</body>
+</html>

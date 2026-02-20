@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Computer Science course introduction, resources, and examples">
+  <title>Computer Science – Mr. Brummer</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #0d1117;
+      --surface: #161b22;
+      --surface2:#1c2128;
+      --border:  #30363d;
+      --text:    #e6edf3;
+      --muted:   #8b949e;
+      --green:   #3fb950;
+      --blue:    #58a6ff;
+      --purple:  #bc8cff;
+      --red:     #f85149;
+      --yellow:  #e3b341;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Banner ── */
+    .banner { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .banner a { display: block; }
+    .banner img { width: 100%; max-height: 160px; object-fit: cover; display: block; }
+
+    /* ── Nav ── */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    nav ul {
+      display: flex; list-style: none;
+      justify-content: center; flex-wrap: wrap;
+      max-width: 1200px; margin: 0 auto; padding: 0 1rem;
+    }
+    nav li { padding: 0; }
+    nav a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 0.85rem 0.9rem;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    nav a:hover { color: var(--text); }
+    nav a.active { color: var(--text); border-bottom-color: var(--green); }
+    nav a.ide-link {
+      color: var(--green);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.8rem;
+      background: rgba(63,185,80,0.1);
+      border-radius: 6px;
+      margin: 0.5rem 0.4rem;
+      padding: 0.35rem 0.8rem;
+      border-bottom: none;
+    }
+    nav a.ide-link:hover { background: rgba(63,185,80,0.2); color: var(--green); }
+
+    /* ── Main ── */
+    main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    .page-intro {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: 0 6px 6px 0;
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+    .page-intro span { color: var(--green); }
+
+    .section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex; flex-direction: column;
+      transition: border-color 0.15s, transform 0.15s;
+      overflow: hidden;
+    }
+    .card:hover { border-color: var(--blue); transform: translateY(-2px); }
+
+    .card-accent { height: 3px; }
+    .accent-green  { background: var(--green); }
+    .accent-blue   { background: var(--blue); }
+    .accent-purple { background: var(--purple); }
+    .accent-yellow { background: var(--yellow); }
+    .accent-red    { background: var(--red); }
+
+    .card-body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; }
+    .card-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .card h3 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .card p { font-size: 0.85rem; color: var(--muted); flex: 1; margin-bottom: 1rem; line-height: 1.6; }
+    .card-btn {
+      display: inline-block;
+      background: var(--surface2);
+      color: var(--blue);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s;
+      text-align: center;
+    }
+    .card-btn:hover { background: rgba(88,166,255,0.1); border-color: var(--blue); }
+    .card-btn.green { color: var(--green); }
+    .card-btn.green:hover { background: rgba(63,185,80,0.1); border-color: var(--green); }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    footer a { color: var(--blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer .brand {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--green);
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    @media (max-width: 640px) {
+      nav ul { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="banner">
+    <a href="index.html" aria-label="Go to homepage">
+      <img src="/Images/banner.jpg" alt="Computer Science Course Banner">
+    </a>
+  </div>
+
+  <nav aria-label="Main navigation">
+    <ul>
+      <li><a href="/index.html" class="active">Home</a></li>
+      <li><a href="/Syllabus.html">Syllabus</a></li>
+      <li><a href="/Resources.html">Resources</a></li>
+      <li><a href="/showcase.html">Showcase</a></li>
+      <li><a href="/coding-examples.html">Coding Examples</a></li>
+      <li><a href="/classcodes.html">Class Codes</a></li>
+      <li><a href="/Login.html" class="ide-link">💻 Classroom IDE</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <div class="page-intro">
+      <span>// Welcome</span> — This course provides an introduction to computer science, programming, and technology.
+      You'll learn fundamental programming concepts, problem-solving strategies, and develop skills that prepare
+      you for advanced computing across electronics, cryptography, 3D modeling, and web development.
+    </div>
+
+    <p class="section-title">// Quick Access</p>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-accent accent-blue"></div>
+        <div class="card-body">
+          <div class="card-icon">📄</div>
+          <h3>Course Overview</h3>
+          <p>Introduces computer science concepts, programming languages, hardware fundamentals, and applied technology skills.</p>
+          <a href="/Syllabus.html" class="card-btn">View Syllabus</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-accent accent-purple"></div>
+        <div class="card-body">
+          <div class="card-icon">📚</div>
+          <h3>Learning Resources</h3>
+          <p>Access tutorials, readings, coding exercises, and additional materials to support your learning.</p>
+          <a href="/Resources.html" class="card-btn">Browse Resources</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-accent accent-yellow"></div>
+        <div class="card-body">
+          <div class="card-icon">🏆</div>
+          <h3>Past Work</h3>
+          <p>See previous student projects to get inspired — from Python apps to 3D models and electronics.</p>
+          <a href="/showcase.html" class="card-btn">View Showcase</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-accent accent-blue"></div>
+        <div class="card-body">
+          <div class="card-icon">🧩</div>
+          <h3>Coding Help</h3>
+          <p>Need tips on how to code? Browse annotated examples for Python and HTML to get unstuck.</p>
+          <a href="/coding-examples.html" class="card-btn">View Examples</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-accent accent-red"></div>
+        <div class="card-body">
+          <div class="card-icon">🎒</div>
+          <h3>Google Classroom</h3>
+          <p>Find your class code and join your period's Google Classroom to access assignments.</p>
+          <a href="classcodes.html" class="card-btn">Class Codes</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-accent accent-green"></div>
+        <div class="card-body">
+          <div class="card-icon">💻</div>
+          <h3>Classroom IDE</h3>
+          <p>Log in to the class coding environment to write, run, and submit Python and HTML projects.</p>
+          <a href="Login.html" class="card-btn green">Launch IDE →</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="brand">💻 CS @ BPHS</div>
+    <p>Instructor: Mr. Brummer &nbsp;·&nbsp; <a href="mailto:mbrummer@schools.nyc.gov">mbrummer@schools.nyc.gov</a></p>
+    <p style="margin-top:0.4rem">&copy; <span id="yr"></span> Computer Science</p>
+  </footer>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    const page = location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('nav a:not(.ide-link)').forEach(a => {
+      if (a.getAttribute('href') === page) { a.classList.add('active'); }
+      else { a.classList.remove('active'); }
+    });
+  </script>
+</body>
+</html>

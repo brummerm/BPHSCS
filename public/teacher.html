@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard — Classroom IDE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #0d1117;
+      --surface:  #161b22;
+      --surface2: #1c2128;
+      --surface3: #21262d;
+      --border:   #30363d;
+      --text:     #e6edf3;
+      --muted:    #8b949e;
+      --green:    #3fb950;
+      --blue:     #58a6ff;
+      --purple:   #bc8cff;
+      --red:      #f85149;
+      --yellow:   #e3b341;
+      --orange:   #f0883e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh; }
+
+    /* ── Nav ── */
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 56px;
+      display: flex; align-items: center; gap: 20px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 700; color: var(--yellow); display: flex; align-items: center; gap: 8px; }
+    .nav-badge { font-size: 0.65rem; background: rgba(227,179,65,0.15); border: 1px solid rgba(227,179,65,0.35); color: var(--yellow); padding: 2px 8px; border-radius: 10px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+    .nav-spacer { flex: 1; }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-link { padding: 6px 14px; border-radius: 6px; border: 1px solid transparent; background: none; color: var(--muted); font-family: 'IBM Plex Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .nav-link:hover { color: var(--text); border-color: var(--border); }
+    .nav-link.primary { background: rgba(63,185,80,0.12); color: var(--green); border-color: rgba(63,185,80,0.25); }
+    .nav-link.primary:hover { background: rgba(63,185,80,0.2); }
+    .nav-link.danger:hover { color: var(--red); border-color: rgba(248,81,73,0.3); }
+    .nav-user { font-size: 0.8rem; color: var(--muted); padding: 0 8px; border-right: 1px solid var(--border); margin-right: 4px; }
+
+    /* ── Page ── */
+    .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+
+    /* ── Section Tabs ── */
+    .section-tabs { display: flex; gap: 4px; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+    .section-tab { padding: 10px 20px; background: none; border: none; color: var(--muted); font-family: 'IBM Plex Sans', sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+    .section-tab.active { color: var(--text); border-bottom-color: var(--yellow); }
+    .section-tab:hover:not(.active) { color: var(--text); }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Stats ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    .stat-card.green  .stat-value { color: var(--green); }
+    .stat-card.blue   .stat-value { color: var(--blue); }
+    .stat-card.yellow .stat-value { color: var(--yellow); }
+    .stat-card.purple .stat-value { color: var(--purple); }
+
+    /* ── Section Header ── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title    { font-size: 1rem; font-weight: 600; color: var(--text); }
+    .section-subtitle { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-primary { background: var(--yellow); color: #000; border-color: var(--yellow); font-weight: 600; }
+    .btn-primary:hover { opacity: 0.85; color: #000; border-color: var(--yellow); }
+    .btn-green { background: rgba(63,185,80,0.12); color: var(--green); border-color: rgba(63,185,80,0.3); }
+    .btn-green:hover { background: rgba(63,185,80,0.2); color: var(--green); }
+    .btn-danger { color: var(--muted); }
+    .btn-danger:hover { color: var(--red); border-color: rgba(248,81,73,0.4); background: rgba(248,81,73,0.06); }
+    .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+    .btn-blue { background: rgba(88,166,255,0.12); color: var(--blue); border-color: rgba(88,166,255,0.3); }
+    .btn-blue:hover { background: rgba(88,166,255,0.2); }
+
+    /* ── Assignment Cards ── */
+    .assignments-grid { display: flex; flex-direction: column; gap: 12px; }
+    .assign-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; transition: border-color 0.15s; }
+    .assign-card:hover { border-color: #444d56; }
+    .assign-card.hidden-card { opacity: 0.65; }
+    .assign-card-top { display: flex; align-items: flex-start; gap: 12px; }
+    .assign-card-info { flex: 1; min-width: 0; }
+    .assign-card-title { font-size: 0.975rem; font-weight: 600; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .lang-badge { font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .lang-badge.python { background: rgba(63,185,80,0.15); color: var(--green); }
+    .lang-badge.html   { background: rgba(240,136,62,0.15); color: var(--orange); }
+    .status-badge { font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    .status-badge.visible { background: rgba(63,185,80,0.1); color: var(--green); border: 1px solid rgba(63,185,80,0.25); }
+    .status-badge.hidden  { background: rgba(248,81,73,0.1); color: var(--red);   border: 1px solid rgba(248,81,73,0.25); }
+    .assign-card-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+    .assign-card-meta { font-size: 0.72rem; color: var(--muted); margin-bottom: 10px; display: flex; gap: 16px; flex-wrap: wrap; }
+    .assign-card-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 4px; }
+    .starter-preview { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--muted); max-height: 80px; overflow: hidden; position: relative; margin: 8px 0; white-space: pre-wrap; word-break: break-all; }
+    .starter-preview::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, var(--bg)); }
+
+    /* ── Empty State ── */
+    .empty-state { text-align: center; padding: 60px 20px; background: var(--surface); border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); }
+    .empty-state-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 0.85rem; margin-bottom: 16px; }
+
+    /* ── Student Table ── */
+    .student-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .student-table th { background: var(--surface2); padding: 10px 16px; text-align: left; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--border); }
+    .student-table td { padding: 12px 16px; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+    .student-table tr:last-child td { border-bottom: none; }
+    .student-table tbody tr:hover td { background: var(--surface2); }
+    .student-email { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--blue); }
+    .student-date  { color: var(--muted); font-size: 0.78rem; }
+    .count-badge   { font-size: 0.72rem; padding: 2px 7px; border-radius: 8px; font-weight: 600; background: var(--surface3); color: var(--muted); border: 1px solid var(--border); }
+
+    /* ── Submissions ── */
+    .submissions-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.82rem; outline: none; cursor: pointer; }
+    .filter-select:focus { border-color: var(--blue); }
+    .sub-count-label { font-size: 0.8rem; color: var(--muted); margin-left: auto; }
+
+    .submissions-list { display: flex; flex-direction: column; gap: 8px; }
+    .sub-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: border-color 0.15s; }
+    .sub-card:hover { border-color: #444d56; }
+    .sub-card-header { padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .sub-card-student { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--blue); font-weight: 600; }
+    .sub-card-assignment { font-size: 0.82rem; color: var(--text); flex: 1; }
+    .sub-card-time { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+    .sub-card-lang { font-size: 0.65rem; padding: 1px 6px; border-radius: 8px; font-weight: 600; text-transform: uppercase; }
+    .sub-card-lang.python { background: rgba(63,185,80,0.15); color: var(--green); }
+    .sub-card-lang.html   { background: rgba(240,136,62,0.15); color: var(--orange); }
+    .sub-card-note { font-size: 0.75rem; color: var(--yellow); font-style: italic; }
+    .sub-card-toggle { color: var(--muted); font-size: 0.75rem; transition: transform 0.2s; flex-shrink: 0; }
+    .sub-card-toggle.open { transform: rotate(180deg); }
+    .sub-card-code { display: none; border-top: 1px solid var(--border); }
+    .sub-card-code.open { display: block; }
+    .sub-card-code pre { padding: 14px 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 1.6; color: var(--text); background: var(--bg); overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow-y: auto; }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: none; align-items: flex-start; justify-content: center; z-index: 500; overflow-y: auto; padding: 40px 20px; }
+    .modal-overlay.show { display: flex; }
+    .color-modal-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      outline: none;
+    }
+    .color-modal-btn:hover { transform: scale(1.15); }
+    .color-modal-btn.active { border-color: var(--text); transform: scale(1.15); }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 680px; box-shadow: 0 24px 64px rgba(0,0,0,0.5); overflow: hidden; }
+    .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 1rem; font-weight: 600; }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--surface2); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--blue); }
+    .form-group textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+    .code-area { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; min-height: 180px; line-height: 1.6; background: var(--bg); tab-size: 4; }
+    .upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg); position: relative; margin-bottom: 10px; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--yellow); background: rgba(227,179,65,0.05); }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-zone-text { font-size: 0.82rem; color: var(--muted); pointer-events: none; }
+    .upload-zone-text strong { color: var(--yellow); }
+    .upload-zone-text .file-types { font-size: 0.72rem; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+    .upload-success { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.25); border-radius: 6px; padding: 8px 12px; font-size: 0.8rem; color: var(--green); display: none; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .upload-success.show { display: flex; }
+    .starter-toggle { display: flex; gap: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 3px; margin-bottom: 12px; }
+    .starter-toggle button { flex: 1; padding: 5px 8px; background: none; border: none; color: var(--muted); font-family: 'IBM Plex Sans', sans-serif; font-size: 0.78rem; cursor: pointer; border-radius: 4px; transition: all 0.15s; }
+    .starter-toggle button.active { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .visibility-row { display: flex; align-items: center; gap: 10px; }
+    .visibility-row input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--green); }
+    .visibility-row label { font-size: 0.875rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+    .modal-error { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); color: var(--red); border-radius: 6px; padding: 8px 12px; font-size: 0.82rem; margin-bottom: 16px; display: none; }
+    .modal-error.show { display: block; }
+    .reset-student-name { font-family: 'JetBrains Mono', monospace; color: var(--blue); font-size: 0.85rem; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 9999; transform: translateY(60px); opacity: 0; transition: all 0.25s; }
+    .toast.show    { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--green); color: var(--green); }
+    .toast.error   { border-color: var(--red);   color: var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <div class="nav-brand">🖥️ Classroom IDE <span class="nav-badge">Teacher</span></div>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <span class="nav-user" id="nav-user-label">Loading…</span>
+    <a href="/Ide.html" class="nav-link">💻 Go to IDE</a>
+    <button class="nav-link danger" onclick="doLogout()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- ── Page ── -->
+<div class="page">
+
+  <!-- Stats -->
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card green">
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-label">Assignments</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-value" id="stat-students">—</div>
+      <div class="stat-label">Students</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-value" id="stat-submissions">—</div>
+      <div class="stat-label">Submissions</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-value" id="stat-visible">—</div>
+      <div class="stat-label">Visible Assignments</div>
+    </div>
+  </div>
+
+  <!-- Section Tabs -->
+  <div class="section-tabs">
+    <button class="section-tab active" onclick="switchSection('assignments', this)">📋 Assignments</button>
+    <button class="section-tab" onclick="switchSection('submissions', this)">📤 Submissions</button>
+    <button class="section-tab" onclick="switchSection('students', this)">👥 Students</button>
+  </div>
+
+  <!-- ── Assignments ── -->
+  <div class="section active" id="section-assignments">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Manage Assignments</div>
+        <div class="section-subtitle">Create, edit, and control visibility of assignments.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAssignModal()">+ New Assignment</button>
+    </div>
+    <div class="assignments-grid" id="assignment-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h3>No assignments yet</h3>
+        <p>Create your first assignment to get students coding.</p>
+        <button class="btn btn-primary" onclick="openAssignModal()">+ New Assignment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Submissions ── -->
+  <div class="section" id="section-submissions">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Student Submissions</div>
+        <div class="section-subtitle">Review code submitted by students for each assignment.</div>
+      </div>
+      <button class="btn btn-green" onclick="loadSubmissions()">↻ Refresh</button>
+    </div>
+    <div class="submissions-toolbar">
+      <label style="font-size:0.8rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Filter by assignment:</label>
+      <select class="filter-select" id="submission-filter" onchange="filterSubmissions()">
+        <option value="">All Assignments</option>
+      </select>
+      <span class="sub-count-label" id="sub-count-label"></span>
+    </div>
+    <div class="submissions-list" id="submissions-list">
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h3>No submissions yet</h3>
+        <p>Submissions will appear here after students submit their work.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Students ── -->
+  <div class="section" id="section-students">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Enrolled Students</div>
+        <div class="section-subtitle">Students who have registered an account.</div>
+      </div>
+    </div>
+    <div id="student-table-wrap">
+      <div class="empty-state">
+        <div class="empty-state-icon">👤</div>
+        <h3>No students yet</h3>
+        <p>Students will appear here after they register.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Assignment Modal ── -->
+<div class="modal-overlay" id="assign-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="assign-modal-title">New Assignment</span>
+      <button class="modal-close" onclick="closeAssignModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="assign-edit-id">
+      <div class="modal-error" id="assign-error"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" id="assign-title" placeholder="e.g. For Loops Practice">
+        </div>
+        <div class="form-group">
+          <label>Language</label>
+          <select id="assign-language">
+            <option value="python">🐍 Python</option>
+            <option value="html">🌐 HTML / CSS</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description <span style="text-transform:none;font-weight:400;">(shown to students)</span></label>
+        <textarea id="assign-description" rows="3" placeholder="Describe what students should build…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Starter Code <span style="text-transform:none;font-weight:400;">(optional)</span></label>
+        <div class="starter-toggle">
+          <button class="active" id="toggle-type-btn" onclick="setStarterMode('type')">✏️ Type Code</button>
+          <button id="toggle-upload-btn" onclick="setStarterMode('upload')">📁 Upload File</button>
+        </div>
+        <div class="upload-zone" id="upload-zone" style="display:none;"
+             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <input type="file" id="starter-file-input" accept=".py,.html,.htm" onchange="handleFileSelect(event)">
+          <div class="upload-zone-text">
+            <strong>Click to upload</strong> or drag and drop
+            <div class="file-types">.py &nbsp;·&nbsp; .html</div>
+          </div>
+        </div>
+        <div class="upload-success" id="upload-success">
+          <span>✓</span>
+          <span id="upload-filename"></span>
+          <button style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;" onclick="clearUpload()">Clear</button>
+        </div>
+        <textarea class="code-area" id="assign-starter" placeholder="# Starter code students will see&#10;# Leave blank for a clean editor"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Visibility</label>
+        <div class="visibility-row">
+          <input type="checkbox" id="assign-visible" checked>
+          <label for="assign-visible">Visible to students immediately after saving</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAssignModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAssignment()">💾 Save Assignment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Reset Password Modal ── -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title">Reset Student Password</span>
+      <button class="modal-close" onclick="closeResetModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reset-user-id">
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;">
+        Resetting password for <span class="reset-student-name" id="reset-student-name"></span>
+      </p>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="text" id="reset-new-pw" placeholder="Min 4 characters">
+      </div>
+      <div class="modal-error" id="reset-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeResetModal()">Cancel</button>
+      <button class="btn btn-green" onclick="doResetPassword()">Reset Password</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="color-modal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <span class="modal-title">Change Class Color</span>
+      <button class="modal-close" onclick="closeColorModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="color-user-id">
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;">
+        Updating color for <strong id="color-student-name"></strong>
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:8px 0 16px;">
+        <button type="button" class="color-modal-btn" data-color="red"    style="background:#f85149" title="Red"></button>
+        <button type="button" class="color-modal-btn" data-color="green"  style="background:#3fb950" title="Green"></button>
+        <button type="button" class="color-modal-btn" data-color="blue"   style="background:#58a6ff" title="Blue"></button>
+        <button type="button" class="color-modal-btn" data-color="yellow" style="background:#e3b341" title="Yellow"></button>
+        <button type="button" class="color-modal-btn" data-color="purple" style="background:#bc8cff" title="Purple"></button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeColorModal()">Cancel</button>
+      <button class="btn btn-green" onclick="saveStudentColor()">Save Color</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let assignments  = [];
+let students     = [];
+let allSubs      = [];
+let starterMode  = 'type';
+
+// ═══════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════
+(async () => {
+  const me = await fetch('/auth/me').then(r => r.json());
+  if (!me.loggedIn)          { window.location.href = '/Login.html'; return; }
+  if (me.role !== 'teacher') { window.location.href = '/Ide.html';   return; }
+
+  document.getElementById('nav-user-label').textContent = me.username;
+  await Promise.all([loadAssignments(), loadStudents(), loadSubmissions()]);
+})();
+
+// ═══════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════
+function switchSection(name, btn) {
+  document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`section-${name}`).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+//  ASSIGNMENTS
+// ═══════════════════════════════════════════════
+async function loadAssignments() {
+  const res = await fetch('/api/assignments');
+  assignments = await res.json();
+  renderAssignments();
+  updateStats();
+  populateSubmissionFilter();
+}
+
+function renderAssignments() {
+  const grid = document.getElementById('assignment-grid');
+  if (!assignments.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><h3>No assignments yet</h3><p>Create your first assignment to get students coding.</p><button class="btn btn-primary" onclick="openAssignModal()">+ New Assignment</button></div>`;
+    return;
+  }
+  grid.innerHTML = assignments.map(a => {
+    const visClass   = a.visible ? 'visible' : 'hidden';
+    const visLabel   = a.visible ? '● Visible' : '○ Hidden';
+    const cardClass  = a.visible ? '' : 'hidden-card';
+    const created    = new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const hasStarter = a.starter_code && a.starter_code.trim().length > 0;
+    const lineCount  = hasStarter ? a.starter_code.trim().split('\n').length : 0;
+    const subCount   = allSubs.filter(s => s.assignment_id === a.id).length;
+    return `
+    <div class="assign-card ${cardClass}">
+      <div class="assign-card-top">
+        <div class="assign-card-info">
+          <div class="assign-card-title">
+            ${escHtml(a.title)}
+            <span class="lang-badge ${a.language}">${a.language === 'python' ? '🐍 Python' : '🌐 HTML/CSS'}</span>
+            <span class="status-badge ${visClass}">${visLabel}</span>
+          </div>
+          ${a.description ? `<div class="assign-card-desc">${escHtml(a.description)}</div>` : ''}
+          <div class="assign-card-meta">
+            <span>📅 ${created}</span>
+            ${hasStarter ? `<span>📄 ${lineCount} line${lineCount !== 1 ? 's' : ''} starter</span>` : '<span style="opacity:0.6;">No starter code</span>'}
+            <span>📤 ${subCount} submission${subCount !== 1 ? 's' : ''}</span>
+          </div>
+          ${hasStarter ? `<div class="starter-preview">${escHtml(a.starter_code)}</div>` : ''}
+        </div>
+      </div>
+      <div class="assign-card-actions">
+        <button class="btn btn-sm" onclick="openAssignModal(${a.id})">✏️ Edit</button>
+        <button class="btn btn-sm" onclick="toggleVisibility(${a.id})">${a.visible ? '🙈 Hide' : '👁 Show'}</button>
+        <button class="btn btn-sm btn-blue" onclick="viewAssignmentSubs(${a.id})">📤 View Submissions (${subCount})</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteAssignment(${a.id})">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent      = assignments.length;
+  document.getElementById('stat-students').textContent   = students.length;
+  document.getElementById('stat-submissions').textContent = allSubs.length;
+  document.getElementById('stat-visible').textContent    = assignments.filter(a => a.visible).length;
+}
+
+// ── Modal ──
+
+function openAssignModal(editId = null) {
+  const isEdit = !!editId;
+  document.getElementById('assign-modal-title').textContent = isEdit ? 'Edit Assignment' : 'New Assignment';
+  document.getElementById('assign-edit-id').value = editId || '';
+  document.getElementById('assign-error').classList.remove('show');
+  clearUpload();
+  setStarterMode('type');
+
+  if (isEdit) {
+    const a = assignments.find(x => x.id === editId);
+    document.getElementById('assign-title').value       = a.title;
+    document.getElementById('assign-description').value = a.description;
+    document.getElementById('assign-language').value    = a.language;
+    document.getElementById('assign-starter').value     = a.starter_code || '';
+    document.getElementById('assign-visible').checked   = !!a.visible;
+  } else {
+    document.getElementById('assign-title').value       = '';
+    document.getElementById('assign-description').value = '';
+    document.getElementById('assign-language').value    = 'python';
+    document.getElementById('assign-starter').value     = '';
+    document.getElementById('assign-visible').checked   = true;
+  }
+  document.getElementById('assign-modal').classList.add('show');
+  setTimeout(() => document.getElementById('assign-title').focus(), 100);
+}
+
+function closeAssignModal() { document.getElementById('assign-modal').classList.remove('show'); }
+
+async function saveAssignment() {
+  const editId = document.getElementById('assign-edit-id').value;
+  const errEl  = document.getElementById('assign-error');
+  errEl.classList.remove('show');
+
+  const body = {
+    title:        document.getElementById('assign-title').value.trim(),
+    description:  document.getElementById('assign-description').value.trim(),
+    language:     document.getElementById('assign-language').value,
+    starter_code: document.getElementById('assign-starter').value,
+    visible:      document.getElementById('assign-visible').checked,
+  };
+
+  if (!body.title) { errEl.textContent = 'Title is required.'; errEl.classList.add('show'); return; }
+
+  const url    = editId ? `/api/assignments/${editId}` : '/api/assignments';
+  const method = editId ? 'PUT' : 'POST';
+  const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+  if (!res.ok) {
+    const d = await res.json();
+    errEl.textContent = d.error || 'Failed to save.';
+    errEl.classList.add('show');
+    return;
+  }
+  closeAssignModal();
+  await loadAssignments();
+  toast(editId ? 'Assignment updated!' : 'Assignment created!', 'success');
+}
+
+async function toggleVisibility(id) {
+  const res = await fetch(`/api/assignments/${id}/toggle`, { method: 'POST' });
+  if (res.ok) {
+    await loadAssignments();
+    const a = assignments.find(x => x.id === id);
+    toast(a?.visible ? 'Now visible to students.' : 'Hidden from students.', 'success');
+  }
+}
+
+async function deleteAssignment(id) {
+  const a = assignments.find(x => x.id === id);
+  if (!confirm(`Delete "${a?.title}"?\n\nThis will also delete all student submissions for this assignment.`)) return;
+  const res = await fetch(`/api/assignments/${id}`, { method: 'DELETE' });
+  if (res.ok) { await Promise.all([loadAssignments(), loadSubmissions()]); toast('Assignment deleted.', 'success'); }
+}
+
+// ═══════════════════════════════════════════════
+//  SUBMISSIONS
+// ═══════════════════════════════════════════════
+async function loadSubmissions() {
+  const res = await fetch('/api/submissions/all');
+  if (!res.ok) return;
+  allSubs = await res.json();
+  renderSubmissions(allSubs);
+  updateStats();
+  renderAssignments(); // refresh submission counts on cards
+}
+
+function populateSubmissionFilter() {
+  const sel = document.getElementById('submission-filter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All Assignments</option>';
+  assignments.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = a.title;
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+}
+
+function filterSubmissions() {
+  const assignId = document.getElementById('submission-filter').value;
+  const filtered = assignId ? allSubs.filter(s => String(s.assignment_id) === assignId) : allSubs;
+  renderSubmissions(filtered);
+}
+
+function viewAssignmentSubs(assignId) {
+  // Switch to submissions tab and filter by this assignment
+  document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelector('[onclick*="submissions"]').classList.add('active');
+  document.getElementById('section-submissions').classList.add('active');
+  document.getElementById('submission-filter').value = String(assignId);
+  filterSubmissions();
+}
+
+function renderSubmissions(subs) {
+  const list = document.getElementById('submissions-list');
+  document.getElementById('sub-count-label').textContent = `${subs.length} submission${subs.length !== 1 ? 's' : ''}`;
+
+  if (!subs.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><h3>No submissions yet</h3><p>Submissions will appear here after students submit their work.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = subs.map(s => {
+    const dt   = new Date(s.submitted_at);
+    const time = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+                 dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const note = s.note ? `<span class="sub-card-note">"${escHtml(s.note)}"</span>` : '';
+    return `
+    <div class="sub-card" id="sub-${s.id}">
+      <div class="sub-card-header" onclick="toggleSubCode(${s.id})">
+        <span class="sub-card-student">${escHtml(s.username)}</span>
+        <span class="sub-card-assignment">${escHtml(s.assignment_title)}</span>
+        ${note}
+        <span class="sub-card-lang ${s.language}">${s.language}</span>
+        <span class="sub-card-time">${time}</span>
+        <span class="sub-card-toggle" id="sub-toggle-${s.id}">▼</span>
+      </div>
+      <div class="sub-card-code" id="sub-code-${s.id}">
+        <pre>${escHtml(s.code || '')}</pre>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSubCode(id) {
+  document.getElementById(`sub-code-${id}`).classList.toggle('open');
+  document.getElementById(`sub-toggle-${id}`).classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════
+//  STUDENTS
+// ═══════════════════════════════════════════════
+async function loadStudents() {
+  const res = await fetch('/api/users');
+  students  = await res.json();
+  renderStudents();
+  updateStats();
+}
+
+let studentSortField = 'last_name';
+let studentSortDir   = 1; // 1 = asc, -1 = desc
+
+function sortStudents(field) {
+  if (studentSortField === field) {
+    studentSortDir *= -1;
+  } else {
+    studentSortField = field;
+    studentSortDir   = 1;
+  }
+  renderStudents();
+}
+
+function renderStudents() {
+  const wrap = document.getElementById('student-table-wrap');
+  if (!students.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">👤</div><h3>No students yet</h3><p>Students appear here after registering on the login page.</p></div>`;
+    return;
+  }
+
+  const colorMap = { red:'#f85149', yellow:'#e3b341', green:'#3fb950', blue:'#58a6ff', purple:'#bc8cff' };
+  const colorOrder = ['red','green','blue','yellow','purple'];
+
+  const sorted = [...students].sort((a, b) => {
+    let av, bv;
+    switch (studentSortField) {
+      case 'last_name':
+        av = ((a.last_name || '') + ' ' + (a.first_name || '')).toLowerCase();
+        bv = ((b.last_name || '') + ' ' + (b.first_name || '')).toLowerCase();
+        break;
+      case 'email':
+        av = (a.username || '').toLowerCase();
+        bv = (b.username || '').toLowerCase();
+        break;
+      case 'color':
+        av = colorOrder.indexOf(a.class_color);
+        bv = colorOrder.indexOf(b.class_color);
+        break;
+      case 'created_at':
+        av = new Date(a.created_at).getTime();
+        bv = new Date(b.created_at).getTime();
+        break;
+      case 'file_count':
+        av = a.file_count; bv = b.file_count; break;
+      case 'submission_count':
+        av = a.submission_count; bv = b.submission_count; break;
+      default:
+        av = 0; bv = 0;
+    }
+    if (av < bv) return -1 * studentSortDir;
+    if (av > bv) return  1 * studentSortDir;
+    return 0;
+  });
+
+  function thArrow(field) {
+    if (studentSortField !== field) return '<span style="opacity:0.3;margin-left:4px;">↕</span>';
+    return studentSortDir === 1
+      ? '<span style="margin-left:4px;">↑</span>'
+      : '<span style="margin-left:4px;">↓</span>';
+  }
+  function th(field, label) {
+    return `<th style="cursor:pointer;user-select:none;" onclick="sortStudents('${field}')">${label}${thArrow(field)}</th>`;
+  }
+
+  wrap.innerHTML = `
+    <table class="student-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          ${th('last_name',         'Name')}
+          ${th('email',             'Email')}
+          ${th('color',             'Color')}
+          ${th('created_at',        'Registered')}
+          ${th('file_count',        'Files')}
+          ${th('submission_count',  'Subs')}
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sorted.map((s, i) => {
+          const hex      = colorMap[s.class_color] || '#58a6ff';
+          const fullName = [s.first_name, s.last_name].filter(Boolean).join(' ') || '—';
+          return `
+          <tr>
+            <td style="color:var(--muted);font-size:0.75rem;">${i + 1}</td>
+            <td><span style="font-weight:500;">${escHtml(fullName)}</span></td>
+            <td><span class="student-email">${escHtml(s.username)}</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:14px;height:14px;border-radius:50%;background:${hex};display:inline-block;flex-shrink:0;"></span>
+                <span style="font-size:0.78rem;color:var(--muted);text-transform:capitalize;">${s.class_color || 'blue'}</span>
+              </div>
+            </td>
+            <td class="student-date">${new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+            <td><span class="count-badge">${s.file_count}</span></td>
+            <td><span class="count-badge">${s.submission_count}</span></td>
+            <td>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="btn btn-sm" onclick="openColorModal(${s.id}, '${escHtml(fullName)}', '${s.class_color || 'blue'}')">🎨 Color</button>
+                <button class="btn btn-sm" onclick="openResetModal(${s.id}, '${escHtml(s.username)}')">🔑 Reset PW</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id}, '${escHtml(s.username)}')">🗑 Remove</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function deleteStudent(id, email) {
+  if (!confirm(`Remove account for:\n${email}\n\nAll their files and submissions will also be deleted.`)) return;
+  const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+  if (res.ok) { await Promise.all([loadStudents(), loadSubmissions()]); toast('Student removed.', 'success'); }
+}
+
+function openResetModal(id, email) {
+  document.getElementById('reset-user-id').value = id;
+  document.getElementById('reset-student-name').textContent = email;
+  document.getElementById('reset-new-pw').value = '';
+  document.getElementById('reset-error').classList.remove('show');
+  document.getElementById('reset-modal').classList.add('show');
+  setTimeout(() => document.getElementById('reset-new-pw').focus(), 100);
+}
+
+function closeResetModal() { document.getElementById('reset-modal').classList.remove('show'); }
+
+// ═══════════════════════════════════════════════
+//  CLASS COLOR
+// ═══════════════════════════════════════════════
+function openColorModal(id, name, currentColor) {
+  document.getElementById('color-user-id').value = id;
+  document.getElementById('color-student-name').textContent = name;
+  // Set active color
+  document.querySelectorAll('.color-modal-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.color === currentColor);
+  });
+  document.getElementById('color-modal').classList.add('show');
+}
+
+function closeColorModal() { document.getElementById('color-modal').classList.remove('show'); }
+
+async function saveStudentColor() {
+  const id    = document.getElementById('color-user-id').value;
+  const color = document.querySelector('.color-modal-btn.active')?.dataset.color;
+  if (!color) return;
+  const res = await fetch(`/api/users/${id}/class-color`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ class_color: color })
+  });
+  if (!res.ok) { toast('Failed to update color.', 'error'); return; }
+  closeColorModal();
+  await loadStudents();
+  toast('Class color updated!', 'success');
+}
+
+document.querySelectorAll('.color-modal-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.color-modal-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+async function doResetPassword() {
+  const id  = document.getElementById('reset-user-id').value;
+  const pw  = document.getElementById('reset-new-pw').value;
+  const errEl = document.getElementById('reset-error');
+  if (!pw || pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.add('show'); return; }
+  const res = await fetch(`/api/users/${id}/reset-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newPassword: pw }) });
+  if (!res.ok) { errEl.textContent = 'Failed to reset password.'; errEl.classList.add('show'); return; }
+  closeResetModal();
+  toast('Password reset successfully.', 'success');
+}
+
+// ═══════════════════════════════════════════════
+//  FILE UPLOAD
+// ═══════════════════════════════════════════════
+function setStarterMode(mode) {
+  starterMode = mode;
+  document.getElementById('toggle-type-btn').classList.toggle('active', mode === 'type');
+  document.getElementById('toggle-upload-btn').classList.toggle('active', mode === 'upload');
+  document.getElementById('upload-zone').style.display   = mode === 'upload' ? 'block' : 'none';
+  document.getElementById('assign-starter').style.display = mode === 'type'   ? 'block' : 'none';
+  if (mode === 'type') document.getElementById('upload-success').classList.remove('show');
+}
+
+function handleFileSelect(e) { const f = e.target.files[0]; if (f) readStarterFile(f); }
+function handleDragOver(e)   { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
+function handleDragLeave(e)  { e.currentTarget.classList.remove('dragover'); }
+function handleDrop(e) {
+  e.preventDefault(); e.currentTarget.classList.remove('dragover');
+  const f = e.dataTransfer.files[0]; if (f) readStarterFile(f);
+}
+
+function readStarterFile(file) {
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  if (!['.py', '.html', '.htm'].includes(ext)) { toast('Only .py and .html files are supported.', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const content = e.target.result;
+    document.getElementById('assign-starter').value = content;
+    if (ext === '.py') document.getElementById('assign-language').value = 'python';
+    if (['.html', '.htm'].includes(ext)) document.getElementById('assign-language').value = 'html';
+    document.getElementById('upload-filename').textContent = `${file.name} (${content.split('\n').length} lines)`;
+    document.getElementById('upload-success').classList.add('show');
+    setStarterMode('type');
+    toast(`${file.name} loaded!`, 'success');
+  };
+  reader.readAsText(file);
+}
+
+function clearUpload() {
+  document.getElementById('starter-file-input').value = '';
+  document.getElementById('upload-success').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════
+async function doLogout() {
+  await fetch('/auth/logout', { method: 'POST' });
+  window.location.href = '/Login.html';
+}
+
+// ═══════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════
+let toastTimer;
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('reset-new-pw')?.addEventListener('keydown', e => { if (e.key === 'Enter') doResetPassword(); });
+});
+</script>
+</body>
+</html>
