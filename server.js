@@ -18,6 +18,7 @@ const {
 } = require('./security');
 
 const app     = express();
+app.set('trust proxy', 1);
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 // ── Session secret: hard-fail in production without it ───────────────────────
@@ -61,14 +62,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   name:  'cls.sid',   // Non-default name prevents server fingerprinting
   store: new SQLiteStore({ db: 'sessions.db', dir: '.' }),
-  secret: SESSION_SECRET || 'classroom-ide-dev-only-change-me',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
     maxAge:   1000 * 60 * 60 * 8,  // 8 hours
     httpOnly: true,
     sameSite: 'lax',
-    secure:   IS_PROD,             // HTTPS-only cookies in production
+    secure:   true,             // HTTPS-only cookies in production
   },
 }));
 
