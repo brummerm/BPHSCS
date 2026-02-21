@@ -1,15 +1,12 @@
 const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
-const path = require('path');
 
 // ── Two separate databases ──────────────────────────────────────────────────
 // auth.db  → user accounts only (credentials, roles)
 // data.db  → files, assignments, submissions (all class data)
 
-const DB_DIR = process.env.DB_DIR || '.';  // fallback for local dev
-
-const authDb = new Database(path.join(DB_DIR, 'auth.db'));
-const dataDb = new Database(path.join(DB_DIR, 'data.db'));
+const authDb = new Database('auth.db');
+const dataDb = new Database('data.db');
 
 authDb.pragma('journal_mode = WAL');
 dataDb.pragma('journal_mode = WAL');
@@ -44,13 +41,14 @@ dataDb.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS assignments (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    title        TEXT    NOT NULL,
-    description  TEXT    DEFAULT '',
-    language     TEXT    NOT NULL DEFAULT 'python',
-    starter_code TEXT    DEFAULT '',
-    visible      INTEGER DEFAULT 1,
-    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    title           TEXT    NOT NULL,
+    description     TEXT    DEFAULT '',
+    language        TEXT    NOT NULL DEFAULT 'python',
+    starter_code    TEXT    DEFAULT '',
+    visible         INTEGER DEFAULT 1,
+    allow_resubmit  INTEGER DEFAULT 0,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS submissions (
@@ -79,6 +77,9 @@ const userCols = authDb.prepare("PRAGMA table_info(users)").all().map(c => c.nam
 if (!userCols.includes('first_name'))  authDb.exec("ALTER TABLE users ADD COLUMN first_name TEXT DEFAULT ''");
 if (!userCols.includes('last_name'))   authDb.exec("ALTER TABLE users ADD COLUMN last_name  TEXT DEFAULT ''");
 if (!userCols.includes('class_color')) authDb.exec("ALTER TABLE users ADD COLUMN class_color TEXT DEFAULT 'blue'");
+
+const assignCols = dataDb.prepare("PRAGMA table_info(assignments)").all().map(c => c.name);
+if (!assignCols.includes('allow_resubmit')) dataDb.exec("ALTER TABLE assignments ADD COLUMN allow_resubmit INTEGER DEFAULT 0");
 
 // ── Seed default teacher account ────────────────────────────────────────────
 
