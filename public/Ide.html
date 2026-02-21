@@ -1,3 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classroom IDE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* Fallback fonts if offline */
+    @font-face { font-family: 'JetBrains Mono'; src: local('Courier New'); }
+    @font-face { font-family: 'IBM Plex Sans'; src: local('Arial'); }
+  </style>
+  <script src="/vs/loader.js"></script>
+  <style>
+    :root {
+      --bg:           #0d1117;
+      --surface:      #161b22;
+      --surface2:     #1c2128;
+      --border:       #30363d;
+      --text:         #e6edf3;
+      --muted:        #8b949e;
+      --green:        #3fb950;
+      --blue:         #58a6ff;
+      --purple:       #bc8cff;
+      --red:          #f85149;
+      --yellow:       #e3b341;
+      --orange:       #f0883e;
+      --sidebar-w:    260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      height: 44px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .topbar-brand {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-right: 8px;
+    }
+
+    .lang-tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 3px;
+      border: 1px solid var(--border);
+    }
+
+    .lang-tab {
+      padding: 4px 12px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .lang-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .spacer { flex: 1; }
+
+    .topbar-file-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 4px;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .topbar-user {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .topbar-user span {
+      color: var(--blue);
+      font-weight: 500;
+    }
+
+    .topbar-user .teacher-badge {
+      color: var(--yellow);
+      font-size: 0.7rem;
+      background: rgba(227,179,65,0.12);
+      border: 1px solid rgba(227,179,65,0.3);
+      padding: 1px 6px;
+      border-radius: 10px;
+      margin-left: 4px;
+    }
+
+    .btn-sm {
+      padding: 4px 12px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-sm:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Main layout ── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-tab {
+      flex: 1;
+      padding: 10px 8px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .sidebar-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--blue);
+    }
+
+    .sidebar-panel {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar-panel.active {
+      display: flex;
+    }
+
+    .sidebar-header {
+      padding: 10px 14px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .sidebar-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 8px;
+    }
+
+    .sidebar-list::-webkit-scrollbar { width: 4px; }
+    .sidebar-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .file-item, .assign-item {
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      margin-bottom: 2px;
+    }
+
+    .file-item:hover, .assign-item:hover {
+      background: var(--surface2);
+      border-color: var(--border);
+    }
+
+    .file-item.active {
+      background: rgba(88,166,255,0.08);
+      border-color: rgba(88,166,255,0.25);
+    }
+
+    .file-icon { font-size: 0.85rem; flex-shrink: 0; margin-top: 1px; }
+
+    .file-info { flex: 1; min-width: 0; }
+
+    .file-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .file-del {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 2px 4px;
+      border-radius: 3px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .file-item:hover .file-del { opacity: 1; }
+    .file-del:hover { color: var(--red); }
+
+    /* New File Input */
+    .new-file-area {
+      padding: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .new-file-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .new-file-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 6px 8px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      outline: none;
+    }
+
+    .new-file-row input:focus { border-color: var(--blue); }
+
+    .btn-create {
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: opacity 0.15s;
+    }
+
+    .btn-create:hover { opacity: 0.85; }
+
+    /* Assignment items */
+    .assign-item {
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .assign-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .assign-title {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .assign-lang {
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .assign-lang.python { background: rgba(63,185,80,0.15); color: var(--green); }
+    .assign-lang.html { background: rgba(240,136,62,0.15); color: var(--orange); }
+
+    .assign-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .assign-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .assign-hidden-badge {
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: rgba(248,81,73,0.12);
+      color: var(--red);
+      border: 1px solid rgba(248,81,73,0.25);
+    }
+
+    .assignment-status {
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 8px;
+    }
+
+    .status-submitted {
+      color: var(--green);
+      background: rgba(63,185,80,0.1);
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(63,185,80,0.25);
+    }
+
+    .status-in-progress {
+      color: var(--yellow);
+      background: rgba(227,179,65,0.1);
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(227,179,65,0.25);
+    }
+
+    .status-not-started {
+      color: var(--muted);
+      background: rgba(139,148,158,0.1);
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Editor Area ── */
+    .editor-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #editor-container {
+      flex: 1;
+    }
+
+    .run-bar {
+      height: 44px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .btn-run {
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 7px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn-run:hover { opacity: 0.85; }
+    .btn-run:active { transform: scale(0.97); }
+
+    .btn-preview {
+      background: var(--orange);
+      color: #000;
+      border: none;
+      padding: 7px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: opacity 0.15s;
+    }
+
+    .btn-preview:hover { opacity: 0.85; }
+
+    .btn-save {
+      background: rgba(88,166,255,0.12);
+      color: var(--blue);
+      border: 1px solid rgba(88,166,255,0.25);
+      padding: 6px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .btn-save:hover { background: rgba(88,166,255,0.2); }
+
+    .save-status {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-left: 4px;
+    }
+
+    .save-status.saved { color: var(--green); }
+
+    .run-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    /* ── Output / Terminal Panel ── */
+    .output-panel {
+      width: 380px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .output-header {
+      height: 36px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .output-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .btn-clear-out {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 3px;
+      transition: color 0.15s;
+    }
+    .btn-clear-out:hover { color: var(--text); }
+
+    /* Terminal wrapper */
+    .terminal-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #0d1117;
+    }
+
+    #terminal-output {
+      flex: 1;
+      padding: 12px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #e6edf3;
+    }
+
+    #terminal-output::-webkit-scrollbar { width: 4px; }
+    #terminal-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .t-stdout { color: #e6edf3; }
+    .t-stderr { color: #f85149; }
+    .t-echo   { color: #58a6ff; }
+    .t-info   { color: #8b949e; font-style: italic; }
+
+    /* Input row at bottom of terminal */
+    .terminal-input-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .terminal-prompt {
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    #terminal-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--green);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      caret-color: var(--green);
+    }
+
+    #terminal-input:disabled { opacity: 0.35; cursor: not-allowed; }
+    #terminal-input::placeholder { color: var(--muted); opacity: 0.6; }
+
+    #preview-frame {
+      flex: 1;
+      border: none;
+      background: white;
+      display: none;
+    }
+
+    /* ── Modals ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      width: 90%;
+      max-width: 560px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+
+    .modal h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    .modal label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 5px;
+    }
+
+    .modal input[type="text"],
+    .modal textarea,
+    .modal select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.875rem;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    .modal textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+    }
+
+    .modal input:focus, .modal textarea:focus, .modal select:focus {
+      border-color: var(--blue);
+    }
+
+    .modal-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .btn-modal-cancel {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.875rem;
+    }
+
+    .btn-modal-save {
+      background: var(--blue);
+      color: #000;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .modal-code-area {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .visibility-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .visibility-row input[type="checkbox"] { width: auto; margin: 0; }
+    .visibility-row label { text-transform: none; letter-spacing: 0; margin: 0; font-size: 0.875rem; color: var(--text); }
+
+    /* ── Submit Button ── */
+    .btn-submit {
+      background: var(--purple);
+      color: #000;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: opacity 0.15s;
+    }
+    .btn-submit:hover { opacity: 0.85; }
+
+    .btn-submitted {
+      background: rgba(188,140,255,0.2);
+      color: var(--purple);
+      border: 1px solid rgba(188,140,255,0.3);
+      cursor: default;
+    }
+    .btn-submitted:hover { opacity: 1; }
+
+    /* ── Submission Modal ── */
+    .submission-list { max-height: 420px; overflow-y: auto; margin-top: 8px; }
+    .submission-list::-webkit-scrollbar { width: 4px; }
+    .submission-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .sub-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .sub-item:hover { border-color: var(--blue); }
+    .sub-item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .sub-student { font-size: 0.85rem; font-weight: 500; color: var(--blue); }
+    .sub-time { font-size: 0.72rem; color: var(--muted); }
+    .sub-note { font-size: 0.78rem; color: var(--muted); margin-top: 4px; font-style: italic; }
+
+    .sub-code-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      max-height: 340px;
+      overflow-y: auto;
+      color: var(--text);
+      margin-top: 10px;
+    }
+
+    .assign-select-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .assign-select-row select {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .assign-select-row select:focus { border-color: var(--blue); }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--blue);
+      cursor: pointer;
+      font-size: 0.82rem;
+      padding: 0;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .back-btn:hover { text-decoration: underline; }
+
+    /* ── Submission History ── */
+    .submission-history {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      background: var(--bg);
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── Utilities ── */
+    .hidden { display: none !important; }
+
+    .empty-state {
+      padding: 24px 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.82rem;
+      z-index: 2000;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .notification.show { transform: translateY(0); opacity: 1; }
+    .notification.success { border-color: var(--green); color: var(--green); }
+    .notification.error   { border-color: var(--red);   color: var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- ── Top Bar ─────────────────────────────────────────────────── -->
+<div class="topbar">
+  <span class="topbar-brand">💻 IDE</span>
+
+  <div class="lang-tabs">
+    <button class="lang-tab active" id="lang-python">🐍 Python</button>
+    <button class="lang-tab" id="lang-html">🌐 HTML/CSS</button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <span class="topbar-file-label" id="current-file-label">unsaved</span>
+
+  <div class="topbar-user" id="user-display"></div>
+
+  <button class="btn-sm" id="password-btn">Password</button>
+  <button id="teacher-dashboard-btn" class="btn-sm hidden">⚙ Dashboard</button>
+  <button class="btn-sm danger" id="logout-btn">Sign Out</button>
+</div>
+
+<!-- ── Main ────────────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-tabs">
+      <button class="sidebar-tab active" id="tab-assignments">Assignments</button>
+      <button class="sidebar-tab hidden" id="tab-teacher">⚙ Teacher</button>
+    </div>
+
+    <!-- Assignments Panel -->
+    <div class="sidebar-panel active" id="panel-assignments">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Assignments</span>
+      </div>
+      <div class="sidebar-list" id="assignment-list">
+        <div class="empty-state">No assignments posted yet.</div>
+      </div>
+    </div>
+
+    <!-- Teacher Panel -->
+    <div class="sidebar-panel" id="panel-teacher">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Manage Assignments</span>
+        <button class="btn-sm" id="new-assignment-btn">+ New</button>
+      </div>
+      <div style="padding: 8px;">
+        <button class="btn-sm" style="width:100%;text-align:center;padding:8px;" id="view-submissions-btn">📋 View Student Submissions</button>
+      </div>
+      <div class="sidebar-list" id="teacher-assign-list">
+        <div class="empty-state">No assignments yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor-area">
+    <div id="editor-container"></div>
+    <div class="run-bar">
+      <button class="btn-run" id="run-btn">▶ Run</button>
+      <button class="btn-preview hidden" id="preview-btn">👁 Preview</button>
+      <button class="btn-save" id="save-btn">💾 Save</button>
+      <span class="save-status" id="save-status"></span>
+      <button class="btn-submit hidden" id="submit-btn">📤 Submit Assignment</button>
+      <span class="run-hint">Ctrl + Enter</span>
+    </div>
+  </div>
+
+  <!-- Output / Preview -->
+  <div class="output-panel">
+    <div class="output-header">
+      <span class="output-label" id="output-label">
+        <span class="terminal-status" id="terminal-status"></span>
+        Terminal
+      </span>
+      <button class="btn-clear-out" id="clear-terminal-btn">✕ clear</button>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal-wrap" id="terminal-wrap">
+      <div id="terminal-output"><span class="t-info">Press ▶ Run to execute your code.
+</span></div>
+      <div class="terminal-input-row">
+        <span class="terminal-prompt" id="terminal-prompt">❯</span>
+        <input id="terminal-input" type="text" placeholder="Type input and press Enter…" disabled autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+
+    <!-- HTML Preview frame -->
+    <iframe id="preview-frame"></iframe>
+  </div>
+
+</div>
+
+<!-- ── Modals ─────────────────────────────────────────────────────── -->
+
+<!-- Assignment Modal -->
+<div class="modal-overlay" id="assign-modal">
+  <div class="modal">
+    <h2 id="assign-modal-title">New Assignment</h2>
+    <input type="hidden" id="assign-edit-id">
+
+    <label>Title</label>
+    <input type="text" id="assign-title" placeholder="e.g. For Loops Practice">
+
+    <label>Description (shown to students)</label>
+    <textarea id="assign-description" rows="3" placeholder="Write a program that..."></textarea>
+
+    <label>Language</label>
+    <select id="assign-language">
+      <option value="python">🐍 Python</option>
+      <option value="html">🌐 HTML / CSS</option>
+    </select>
+
+    <div class="modal-code-area">Starter Code (optional — loaded into editor when student opens this assignment)</div>
+    <textarea id="assign-starter" rows="6" style="min-height:120px;" placeholder="# Starter code here...&#10;# Students will see this when they open the assignment."></textarea>
+
+    <div class="visibility-row">
+      <input type="checkbox" id="assign-visible" checked>
+      <label for="assign-visible">Visible to students</label>
+    </div>
+
+    <div class="modal-row">
+      <button class="btn-modal-cancel" id="cancel-assign-btn">Cancel</button>
+      <button class="btn-modal-save" id="save-assign-btn">Save Assignment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submit Assignment Modal -->
+<div class="modal-overlay" id="submit-modal">
+  <div class="modal">
+    <h2>📤 Submit Assignment</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;">Your current code will be submitted to your teacher for review.</p>
+    <label>Assignment</label>
+    <input type="text" id="submit-assign-name" disabled style="opacity:0.6;">
+    <label>Note to teacher (optional)</label>
+    <textarea id="submit-note" rows="3" placeholder="e.g. I had trouble with the loop on line 5..."></textarea>
+    <div class="submission-history" id="last-submission-info"></div>
+    <div class="modal-row">
+      <button class="btn-modal-cancel" id="cancel-submit-btn">Cancel</button>
+      <button class="btn-modal-save" style="background:var(--purple);" id="confirm-submit-btn">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Teacher: View Submissions Modal -->
+<div class="modal-overlay" id="submissions-modal">
+  <div class="modal" style="max-width:680px;">
+    <h2 id="submissions-modal-title">Student Submissions</h2>
+
+    <!-- Assignment selector view -->
+    <div id="submissions-assign-view">
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">Select an assignment to view submissions:</p>
+      <div class="assign-select-row">
+        <select id="submissions-assign-select">
+          <option value="">-- Choose assignment --</option>
+        </select>
+        <button class="btn-sm" id="load-submissions-btn">Load</button>
+      </div>
+      <div class="submission-list" id="submission-list">
+        <div style="color:var(--muted);font-size:0.82rem;">Choose an assignment above to see submissions.</div>
+      </div>
+    </div>
+
+    <!-- Single submission code view -->
+    <div id="submissions-code-view" style="display:none;">
+      <button class="back-btn" id="back-to-list-btn">← Back to list</button>
+      <div id="sub-detail-header" style="margin-bottom:8px;"></div>
+      <pre class="sub-code-block" id="sub-detail-code"></pre>
+    </div>
+
+    <div class="modal-row" style="margin-top:16px;">
+      <button class="btn-modal-cancel" id="close-submissions-btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal-overlay" id="pw-modal">
+  <div class="modal">
+    <h2>Change Password</h2>
+    <label>Current Password</label>
+    <input type="password" id="pw-current" placeholder="••••••••">
+    <label>New Password</label>
+    <input type="password" id="pw-new" placeholder="••••••••">
+    <label>Confirm New Password</label>
+    <input type="password" id="pw-confirm" placeholder="••••••••">
+    <div id="pw-error" style="color:var(--red);font-size:0.8rem;margin-bottom:10px;"></div>
+    <div class="modal-row">
+      <button class="btn-modal-cancel" id="cancel-pw-btn">Cancel</button>
+      <button class="btn-modal-save" id="update-pw-btn">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Toast -->
+<div class="notification" id="toast"></div>
+
 <script>
 // ═══════════════════════════════════════════════════════════════
 //  STATE
@@ -101,49 +1142,71 @@ const DEFAULT_HTML   = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <style>\n  
     
   } catch (err) {
     console.error('Boot error:', err);
+    // Show error on page so it's not just white
+    document.body.innerHTML = `<div style="color: red; padding: 20px;">Error loading IDE: ${err.message}</div>`;
   }
 })();
 
 function setupEventListeners() {
   // Language tabs
-  document.getElementById('lang-python').addEventListener('click', () => switchLang('python'));
-  document.getElementById('lang-html').addEventListener('click', () => switchLang('html'));
+  const langPython = document.getElementById('lang-python');
+  const langHtml = document.getElementById('lang-html');
+  if (langPython) langPython.addEventListener('click', () => switchLang('python'));
+  if (langHtml) langHtml.addEventListener('click', () => switchLang('html'));
 
   // Sidebar tabs
-  document.getElementById('tab-assignments').addEventListener('click', () => switchSideTab('assignments'));
-  document.getElementById('tab-teacher').addEventListener('click', () => switchSideTab('teacher'));
+  const tabAssignments = document.getElementById('tab-assignments');
+  const tabTeacher = document.getElementById('tab-teacher');
+  if (tabAssignments) tabAssignments.addEventListener('click', () => switchSideTab('assignments'));
+  if (tabTeacher) tabTeacher.addEventListener('click', () => switchSideTab('teacher'));
 
   // Buttons
-  document.getElementById('password-btn').addEventListener('click', openPasswordModal);
-  document.getElementById('teacher-dashboard-btn').addEventListener('click', () => window.location.href = '/teacher.html');
-  document.getElementById('logout-btn').addEventListener('click', doLogout);
-  
-  document.getElementById('run-btn').addEventListener('click', runPython);
-  document.getElementById('preview-btn').addEventListener('click', previewHTML);
-  document.getElementById('save-btn').addEventListener('click', () => saveCurrentFile());
-  document.getElementById('submit-btn').addEventListener('click', openSubmitModal);
-  document.getElementById('clear-terminal-btn').addEventListener('click', clearTerminal);
+  const passwordBtn = document.getElementById('password-btn');
+  const teacherDashboardBtn = document.getElementById('teacher-dashboard-btn');
+  const logoutBtn = document.getElementById('logout-btn');
+  const runBtn = document.getElementById('run-btn');
+  const previewBtn = document.getElementById('preview-btn');
+  const saveBtn = document.getElementById('save-btn');
+  const submitBtn = document.getElementById('submit-btn');
+  const clearTerminalBtn = document.getElementById('clear-terminal-btn');
+  const newAssignmentBtn = document.getElementById('new-assignment-btn');
+  const viewSubmissionsBtn = document.getElementById('view-submissions-btn');
 
-  // Teacher panel buttons
-  document.getElementById('new-assignment-btn').addEventListener('click', () => openAssignmentModal());
-  document.getElementById('view-submissions-btn').addEventListener('click', openSubmissionsModal);
+  if (passwordBtn) passwordBtn.addEventListener('click', openPasswordModal);
+  if (teacherDashboardBtn) teacherDashboardBtn.addEventListener('click', () => window.location.href = '/teacher.html');
+  if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
+  if (runBtn) runBtn.addEventListener('click', runPython);
+  if (previewBtn) previewBtn.addEventListener('click', previewHTML);
+  if (saveBtn) saveBtn.addEventListener('click', () => saveCurrentFile());
+  if (submitBtn) submitBtn.addEventListener('click', openSubmitModal);
+  if (clearTerminalBtn) clearTerminalBtn.addEventListener('click', clearTerminal);
+  if (newAssignmentBtn) newAssignmentBtn.addEventListener('click', () => openAssignmentModal());
+  if (viewSubmissionsBtn) viewSubmissionsBtn.addEventListener('click', openSubmissionsModal);
 
   // Modal buttons
-  document.getElementById('cancel-assign-btn').addEventListener('click', closeAssignmentModal);
-  document.getElementById('save-assign-btn').addEventListener('click', saveAssignment);
-  
-  document.getElementById('cancel-submit-btn').addEventListener('click', closeSubmitModal);
-  document.getElementById('confirm-submit-btn').addEventListener('click', submitAssignment);
-  
-  document.getElementById('load-submissions-btn').addEventListener('click', loadSubmissionsForAssignment);
-  document.getElementById('back-to-list-btn').addEventListener('click', backToSubmissionList);
-  document.getElementById('close-submissions-btn').addEventListener('click', closeSubmissionsModal);
-  
-  document.getElementById('cancel-pw-btn').addEventListener('click', closePasswordModal);
-  document.getElementById('update-pw-btn').addEventListener('click', changePassword);
+  const cancelAssignBtn = document.getElementById('cancel-assign-btn');
+  const saveAssignBtn = document.getElementById('save-assign-btn');
+  const cancelSubmitBtn = document.getElementById('cancel-submit-btn');
+  const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
+  const loadSubmissionsBtn = document.getElementById('load-submissions-btn');
+  const backToListBtn = document.getElementById('back-to-list-btn');
+  const closeSubmissionsBtn = document.getElementById('close-submissions-btn');
+  const cancelPwBtn = document.getElementById('cancel-pw-btn');
+  const updatePwBtn = document.getElementById('update-pw-btn');
+
+  if (cancelAssignBtn) cancelAssignBtn.addEventListener('click', closeAssignmentModal);
+  if (saveAssignBtn) saveAssignBtn.addEventListener('click', saveAssignment);
+  if (cancelSubmitBtn) cancelSubmitBtn.addEventListener('click', closeSubmitModal);
+  if (confirmSubmitBtn) confirmSubmitBtn.addEventListener('click', submitAssignment);
+  if (loadSubmissionsBtn) loadSubmissionsBtn.addEventListener('click', loadSubmissionsForAssignment);
+  if (backToListBtn) backToListBtn.addEventListener('click', backToSubmissionList);
+  if (closeSubmissionsBtn) closeSubmissionsBtn.addEventListener('click', closeSubmissionsModal);
+  if (cancelPwBtn) cancelPwBtn.addEventListener('click', closePasswordModal);
+  if (updatePwBtn) updatePwBtn.addEventListener('click', changePassword);
 
   // Terminal input
-  document.getElementById('terminal-input').addEventListener('keydown', handleTerminalInput);
+  const terminalInput = document.getElementById('terminal-input');
+  if (terminalInput) terminalInput.addEventListener('keydown', handleTerminalInput);
 
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -152,15 +1215,6 @@ function setupEventListeners() {
     });
   });
 
-  // Color picker buttons
-  document.querySelectorAll('.color-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('reg-color').value = btn.dataset.color;
-    });
-  });
-  
   // Save before page unload
   window.addEventListener('beforeunload', (e) => {
     if (currentAssignmentId && editor && !hasSubmitted) {
@@ -198,117 +1252,59 @@ function switchLang(lang) {
     t.classList.toggle('active', (lang === 'python' && i === 0) || (lang === 'html' && i === 1));
   });
   if (lang === 'python') {
-    document.getElementById('run-btn').classList.remove('hidden');
-    document.getElementById('preview-btn').classList.add('hidden');
-    document.getElementById('terminal-wrap').style.display = 'flex';
-    document.getElementById('preview-frame').style.display = 'none';
-    document.getElementById('output-label').innerHTML = '<span class="terminal-status" id="terminal-status"></span> Terminal';
+    const runBtn = document.getElementById('run-btn');
+    const previewBtn = document.getElementById('preview-btn');
+    const terminalWrap = document.getElementById('terminal-wrap');
+    const previewFrame = document.getElementById('preview-frame');
+    const outputLabel = document.getElementById('output-label');
+    
+    if (runBtn) runBtn.classList.remove('hidden');
+    if (previewBtn) previewBtn.classList.add('hidden');
+    if (terminalWrap) terminalWrap.style.display = 'flex';
+    if (previewFrame) previewFrame.style.display = 'none';
+    if (outputLabel) outputLabel.innerHTML = '<span class="terminal-status" id="terminal-status"></span> Terminal';
   } else {
-    document.getElementById('run-btn').classList.add('hidden');
-    document.getElementById('preview-btn').classList.remove('hidden');
-    document.getElementById('terminal-wrap').style.display = 'none';
-    document.getElementById('preview-frame').style.display = 'block';
-    document.getElementById('output-label').textContent = 'Preview';
+    const runBtn = document.getElementById('run-btn');
+    const previewBtn = document.getElementById('preview-btn');
+    const terminalWrap = document.getElementById('terminal-wrap');
+    const previewFrame = document.getElementById('preview-frame');
+    const outputLabel = document.getElementById('output-label');
+    
+    if (runBtn) runBtn.classList.add('hidden');
+    if (previewBtn) previewBtn.classList.remove('hidden');
+    if (terminalWrap) terminalWrap.style.display = 'none';
+    if (previewFrame) previewFrame.style.display = 'block';
+    if (outputLabel) outputLabel.textContent = 'Preview';
   }
 
-  if (!currentFileId && !currentAssignmentId) {
+  if (!currentFileId && !currentAssignmentId && editor) {
     monaco.editor.setModelLanguage(editor.getModel(), lang === 'html' ? 'html' : 'python');
     editor.setValue(lang === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML);
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  FILE MANAGEMENT
+//  FILE MANAGEMENT (simplified - remove file references since no file panel)
 // ═══════════════════════════════════════════════════════════════
+// These functions are kept but won't be used since the file panel is missing
 async function loadFiles() {
-  const res = await fetch('/api/files');
-  files = await res.json();
-  renderFileList();
+  // No file panel, so just return
+  return;
 }
 
 function renderFileList() {
-  const list = document.getElementById('file-list');
-  if (!files.length) {
-    list.innerHTML = '<div class="empty-state">No files yet.<br>Create one below.</div>';
-    return;
-  }
-
-  list.innerHTML = files.map(f => {
-    const icon = f.language === 'html' ? '🌐' : '🐍';
-    const date = new Date(f.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const active = f.id === currentFileId ? 'active' : '';
-    return `
-      <div class="file-item ${active}" data-file-id="${f.id}">
-        <span class="file-icon">${icon}</span>
-        <div class="file-info">
-          <div class="file-name">${escHtml(f.filename)}</div>
-          <div class="file-meta">${date}</div>
-        </div>
-        <button class="file-del" data-file-id="${f.id}" title="Delete">✕</button>
-      </div>`;
-  }).join('');
-  
-  // Add event listeners to file items
-  document.querySelectorAll('.file-item').forEach(item => {
-    item.addEventListener('click', function(e) {
-      if (!e.target.classList.contains('file-del')) {
-        const id = this.dataset.fileId;
-        if (id) openFile(parseInt(id));
-      }
-    });
-  });
-  
-  document.querySelectorAll('.file-del').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const id = this.dataset.fileId;
-      if (id) deleteFile(e, parseInt(id));
-    });
-  });
+  // No file panel, so do nothing
+  return;
 }
 
 async function openFile(id) {
-  const res  = await fetch(`/api/files/${id}`);
-  const file = await res.json();
-  if (!res.ok) { toast('Could not load file.', 'error'); return; }
-
-  currentFileId = file.id;
-  currentFile   = file;
-  currentAssignmentId = null; // Clear assignment context
-  currentAssignmentTitle = '';
-
-  const lang = file.language || 'python';
-  switchLang(lang);
-  editor.setValue(file.content || '');
-  monaco.editor.setModelLanguage(editor.getModel(), lang === 'html' ? 'html' : 'python');
-
-  document.getElementById('current-file-label').textContent = file.filename;
-  setSaveStatus('saved');
-  document.getElementById('submit-btn').classList.add('hidden');
-  renderFileList();
+  // No file panel, so just return
+  return;
 }
 
 async function createFile() {
-  const input = document.getElementById('new-filename-input');
-  let name = input.value.trim();
-  if (!name) return;
-
-  // Auto-add extension hint
-  const lang = currentLang;
-  if (!name.includes('.')) name += lang === 'html' ? '.html' : '.py';
-
-  const res  = await fetch('/api/files', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filename: name, language: lang, content: lang === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML })
-  });
-  const data = await res.json();
-
-  if (!res.ok) { toast(data.error, 'error'); return; }
-  input.value = '';
-  await loadFiles();
-  openFile(data.id);
-  toast(`Created "${name}"`, 'success');
+  // No file panel, so just return
+  return;
 }
 
 async function saveCurrentFile(silent = false) {
@@ -330,7 +1326,6 @@ async function saveCurrentFile(silent = false) {
   if (res.ok) {
     setSaveStatus('✓ Saved');
     if (!silent) toast('Saved!', 'success');
-    await loadFiles();
   } else {
     setSaveStatus('✗ Save error');
     if (!silent) toast('Save failed.', 'error');
@@ -361,23 +1356,13 @@ async function saveAssignmentProgress(silent = false) {
 }
 
 async function deleteFile(e, id) {
-  e.stopPropagation();
-  const file = files.find(f => f.id === id);
-  if (!confirm(`Delete "${file?.filename}"? This cannot be undone.`)) return;
-
-  await fetch(`/api/files/${id}`, { method: 'DELETE' });
-  if (currentFileId === id) {
-    currentFileId = null; currentFile = null;
-    editor.setValue(DEFAULT_PYTHON);
-    document.getElementById('current-file-label').textContent = 'unsaved';
-    setSaveStatus('');
-  }
-  await loadFiles();
-  toast('File deleted.', 'success');
+  // No file panel, so just return
+  return;
 }
 
 function setSaveStatus(status) {
   const el = document.getElementById('save-status');
+  if (!el) return;
   el.textContent = status;
   el.className = 'save-status';
   if (status === '✓ Saved' || status === '✓ Auto-saved') {
@@ -397,6 +1382,8 @@ async function loadAssignments() {
 
 function renderAssignments() {
   const list = document.getElementById('assignment-list');
+  if (!list) return;
+  
   const visible = userRole === 'teacher' ? assignments : assignments.filter(a => a.visible);
   if (!visible.length) {
     list.innerHTML = '<div class="empty-state">No assignments posted yet.</div>';
@@ -495,6 +1482,8 @@ async function loadSubmissionStatusForAssignments() {
 
 function renderTeacherAssignments() {
   const list = document.getElementById('teacher-assign-list');
+  if (!list) return;
+  
   if (!assignments.length) {
     list.innerHTML = '<div class="empty-state">No assignments yet.<br>Click + New above.</div>';
     return;
@@ -583,14 +1572,20 @@ async function loadAssignment(id) {
       toast(`Opened: ${a.title}`, 'success');
     }
     
-    document.getElementById('submit-btn').classList.remove('hidden');
+    const submitBtn = document.getElementById('submit-btn');
+    const currentFileLabel = document.getElementById('current-file-label');
+    
+    if (submitBtn) submitBtn.classList.remove('hidden');
+    if (currentFileLabel) currentFileLabel.textContent = `Assignment: ${a.title}`;
     updateSubmitButton();
-    document.getElementById('current-file-label').textContent = `Assignment: ${a.title}`;
   } else {
     // Teacher just sees starter code
     editor.setValue(a.starter_code || (a.language === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML));
-    document.getElementById('submit-btn').classList.add('hidden');
-    document.getElementById('current-file-label').textContent = `Assignment (teacher): ${a.title}`;
+    const submitBtn = document.getElementById('submit-btn');
+    const currentFileLabel = document.getElementById('current-file-label');
+    
+    if (submitBtn) submitBtn.classList.add('hidden');
+    if (currentFileLabel) currentFileLabel.textContent = `Assignment (teacher): ${a.title}`;
     toast(`Opened: ${a.title}`, 'success');
   }
 }
@@ -598,39 +1593,61 @@ async function loadAssignment(id) {
 // ── Teacher Assignment CRUD ──
 
 function openAssignmentModal(editId = null) {
-  document.getElementById('assign-edit-id').value = editId || '';
-  document.getElementById('assign-modal-title').textContent = editId ? 'Edit Assignment' : 'New Assignment';
+  const modal = document.getElementById('assign-modal');
+  const titleEl = document.getElementById('assign-modal-title');
+  const editIdEl = document.getElementById('assign-edit-id');
+  const titleInput = document.getElementById('assign-title');
+  const descInput = document.getElementById('assign-description');
+  const langSelect = document.getElementById('assign-language');
+  const starterInput = document.getElementById('assign-starter');
+  const visibleCheck = document.getElementById('assign-visible');
+  
+  if (!modal || !titleEl || !editIdEl || !titleInput || !descInput || !langSelect || !starterInput || !visibleCheck) return;
+  
+  editIdEl.value = editId || '';
+  titleEl.textContent = editId ? 'Edit Assignment' : 'New Assignment';
 
   if (editId) {
     const a = assignments.find(x => x.id === editId);
-    document.getElementById('assign-title').value       = a.title;
-    document.getElementById('assign-description').value = a.description;
-    document.getElementById('assign-language').value    = a.language;
-    document.getElementById('assign-starter').value     = a.starter_code;
-    document.getElementById('assign-visible').checked   = !!a.visible;
+    if (a) {
+      titleInput.value = a.title;
+      descInput.value = a.description;
+      langSelect.value = a.language;
+      starterInput.value = a.starter_code;
+      visibleCheck.checked = !!a.visible;
+    }
   } else {
-    document.getElementById('assign-title').value       = '';
-    document.getElementById('assign-description').value = '';
-    document.getElementById('assign-language').value    = 'python';
-    document.getElementById('assign-starter').value     = '';
-    document.getElementById('assign-visible').checked   = true;
+    titleInput.value = '';
+    descInput.value = '';
+    langSelect.value = 'python';
+    starterInput.value = '';
+    visibleCheck.checked = true;
   }
 
-  document.getElementById('assign-modal').classList.add('show');
+  modal.classList.add('show');
 }
 
 function closeAssignmentModal() {
-  document.getElementById('assign-modal').classList.remove('show');
+  const modal = document.getElementById('assign-modal');
+  if (modal) modal.classList.remove('show');
 }
 
 async function saveAssignment() {
-  const editId = document.getElementById('assign-edit-id').value;
+  const editId = document.getElementById('assign-edit-id')?.value;
+  const titleInput = document.getElementById('assign-title');
+  const descInput = document.getElementById('assign-description');
+  const langSelect = document.getElementById('assign-language');
+  const starterInput = document.getElementById('assign-starter');
+  const visibleCheck = document.getElementById('assign-visible');
+  
+  if (!titleInput || !descInput || !langSelect || !starterInput || !visibleCheck) return;
+  
   const body = {
-    title:        document.getElementById('assign-title').value.trim(),
-    description:  document.getElementById('assign-description').value.trim(),
-    language:     document.getElementById('assign-language').value,
-    starter_code: document.getElementById('assign-starter').value,
-    visible:      document.getElementById('assign-visible').checked,
+    title:        titleInput.value.trim(),
+    description:  descInput.value.trim(),
+    language:     langSelect.value,
+    starter_code: starterInput.value,
+    visible:      visibleCheck.checked,
   };
 
   if (!body.title) { toast('Title is required.', 'error'); return; }
@@ -690,9 +1707,12 @@ async function runPython() {
 
   clearTerminal();
   isRunning = true;
+  const runBtn = document.getElementById('run-btn');
+  if (runBtn) {
+    runBtn.textContent = '■ Stop';
+    runBtn.style.background = 'var(--red)';
+  }
   setTerminalRunning(true);
-  document.getElementById('run-btn').textContent = '■ Stop';
-  document.getElementById('run-btn').style.background = 'var(--red)';
 
   // 1. Start the process
   let pid;
@@ -747,6 +1767,7 @@ async function runPython() {
 
 function resetRunBtn() {
   const btn = document.getElementById('run-btn');
+  if (!btn) return;
   btn.textContent = '▶ Run';
   btn.style.background = '';
 }
@@ -764,6 +1785,7 @@ function setTerminalRunning(running) {
 
 function appendTerminal(text, cls = 't-stdout') {
   const out  = document.getElementById('terminal-output');
+  if (!out) return;
   const span = document.createElement('span');
   span.className   = cls;
   span.textContent = text;
@@ -777,7 +1799,8 @@ function clearTerminal() {
 }
 
 function previewHTML() {
-  document.getElementById('preview-frame').srcdoc = editor.getValue();
+  const frame = document.getElementById('preview-frame');
+  if (frame) frame.srcdoc = editor.getValue();
 }
 
 // Send a line of input to the running process
@@ -809,30 +1832,41 @@ async function doLogout() {
 }
 
 function openPasswordModal() {
-  document.getElementById('pw-current').value = '';
-  document.getElementById('pw-new').value     = '';
-  document.getElementById('pw-confirm').value = '';
-  document.getElementById('pw-error').textContent = '';
-  document.getElementById('pw-modal').classList.add('show');
+  const modal = document.getElementById('pw-modal');
+  const current = document.getElementById('pw-current');
+  const newPw = document.getElementById('pw-new');
+  const confirm = document.getElementById('pw-confirm');
+  const error = document.getElementById('pw-error');
+  
+  if (current) current.value = '';
+  if (newPw) newPw.value = '';
+  if (confirm) confirm.value = '';
+  if (error) error.textContent = '';
+  if (modal) modal.classList.add('show');
 }
 
 function closePasswordModal() {
-  document.getElementById('pw-modal').classList.remove('show');
+  const modal = document.getElementById('pw-modal');
+  if (modal) modal.classList.remove('show');
 }
 
 async function changePassword() {
-  const cur  = document.getElementById('pw-current').value;
-  const nw   = document.getElementById('pw-new').value;
-  const conf = document.getElementById('pw-confirm').value;
+  const cur  = document.getElementById('pw-current')?.value;
+  const nw   = document.getElementById('pw-new')?.value;
+  const conf = document.getElementById('pw-confirm')?.value;
   const errEl = document.getElementById('pw-error');
 
-  if (nw !== conf) { errEl.textContent = 'New passwords do not match.'; return; }
-  if (nw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; return; }
+  if (!cur || !nw || !conf) { 
+    if (errEl) errEl.textContent = 'All fields are required.'; 
+    return; 
+  }
+  if (nw !== conf) { if (errEl) errEl.textContent = 'New passwords do not match.'; return; }
+  if (nw.length < 8) { if (errEl) errEl.textContent = 'Password must be at least 8 characters.'; return; }
 
   const res  = await fetch('/auth/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword: cur, newPassword: nw }) });
   const data = await res.json();
 
-  if (!res.ok) { errEl.textContent = data.error; return; }
+  if (!res.ok) { if (errEl) errEl.textContent = data.error; return; }
   closePasswordModal();
   toast('Password updated!', 'success');
 }
@@ -844,28 +1878,35 @@ function openSubmitModal() {
   if (!currentAssignmentId) { toast('No assignment loaded.', 'error'); return; }
   if (hasSubmitted) { toast('You have already submitted this assignment.', 'error'); return; }
   
-  document.getElementById('submit-assign-name').value = currentAssignmentTitle;
-  document.getElementById('submit-note').value = '';
+  const assignName = document.getElementById('submit-assign-name');
+  const note = document.getElementById('submit-note');
+  const lastSubInfo = document.getElementById('last-submission-info');
+  
+  if (assignName) assignName.value = currentAssignmentTitle;
+  if (note) note.value = '';
   
   // Show last submission info if any
-  const lastSubInfo = document.getElementById('last-submission-info');
-  if (lastSubmission) {
-    const date = new Date(lastSubmission.submitted_at).toLocaleString();
-    lastSubInfo.innerHTML = `Last submitted: ${date}`;
-  } else {
-    lastSubInfo.innerHTML = '';
+  if (lastSubInfo) {
+    if (lastSubmission) {
+      const date = new Date(lastSubmission.submitted_at).toLocaleString();
+      lastSubInfo.innerHTML = `Last submitted: ${date}`;
+    } else {
+      lastSubInfo.innerHTML = '';
+    }
   }
   
-  document.getElementById('submit-modal').classList.add('show');
+  const modal = document.getElementById('submit-modal');
+  if (modal) modal.classList.add('show');
 }
 
 function closeSubmitModal() {
-  document.getElementById('submit-modal').classList.remove('show');
+  const modal = document.getElementById('submit-modal');
+  if (modal) modal.classList.remove('show');
 }
 
 async function submitAssignment() {
   const code = editor.getValue();
-  const note = document.getElementById('submit-note').value.trim();
+  const note = document.getElementById('submit-note')?.value.trim() || '';
 
   // Auto-save before submitting
   await saveAssignmentProgress(true);
@@ -904,32 +1945,44 @@ async function submitAssignment() {
 //  SUBMISSIONS — TEACHER
 // ═══════════════════════════════════════════════════════════════
 function openSubmissionsModal() {
+  const select = document.getElementById('submissions-assign-select');
+  const list = document.getElementById('submission-list');
+  const assignView = document.getElementById('submissions-assign-view');
+  const codeView = document.getElementById('submissions-code-view');
+  const title = document.getElementById('submissions-modal-title');
+  const modal = document.getElementById('submissions-modal');
+  
+  if (!select || !list || !assignView || !codeView || !title || !modal) return;
+  
   // Populate assignment dropdown
-  const sel = document.getElementById('submissions-assign-select');
-  sel.innerHTML = '<option value="">-- Choose assignment --</option>' +
+  select.innerHTML = '<option value="">-- Choose assignment --</option>' +
     assignments.map(a => `<option value="${a.id}">${escHtml(a.title)}</option>`).join('');
-  document.getElementById('submission-list').innerHTML =
-    '<div style="color:var(--muted);font-size:0.82rem;">Choose an assignment above to see submissions.</div>';
-  document.getElementById('submissions-assign-view').style.display = 'block';
-  document.getElementById('submissions-code-view').style.display   = 'none';
-  document.getElementById('submissions-modal-title').textContent   = 'Student Submissions';
-  document.getElementById('submissions-modal').classList.add('show');
+  
+  list.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;">Choose an assignment above to see submissions.</div>';
+  assignView.style.display = 'block';
+  codeView.style.display = 'none';
+  title.textContent = 'Student Submissions';
+  modal.classList.add('show');
 }
 
 function closeSubmissionsModal() {
-  document.getElementById('submissions-modal').classList.remove('show');
+  const modal = document.getElementById('submissions-modal');
+  if (modal) modal.classList.remove('show');
 }
 
 async function loadSubmissionsForAssignment() {
-  const assignId = document.getElementById('submissions-assign-select').value;
+  const assignId = document.getElementById('submissions-assign-select')?.value;
   if (!assignId) { toast('Please select an assignment.', 'error'); return; }
 
   const res  = await fetch(`/api/submissions/assignment/${assignId}`);
   const subs = await res.json();
   const list = document.getElementById('submission-list');
+  const title = document.getElementById('submissions-modal-title');
+  
+  if (!list || !title) return;
 
   const assignTitle = assignments.find(a => a.id == assignId)?.title || 'Assignment';
-  document.getElementById('submissions-modal-title').textContent = `Submissions: ${assignTitle}`;
+  title.textContent = `Submissions: ${assignTitle}`;
 
   if (!subs.length) {
     list.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;padding:12px 0;">No submissions yet for this assignment.</div>';
@@ -963,7 +2016,15 @@ async function viewSubmission(id) {
 
   const date = new Date(sub.submitted_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-  document.getElementById('sub-detail-header').innerHTML = `
+  const header = document.getElementById('sub-detail-header');
+  const code = document.getElementById('sub-detail-code');
+  const assignView = document.getElementById('submissions-assign-view');
+  const codeView = document.getElementById('submissions-code-view');
+  const title = document.getElementById('submissions-modal-title');
+  
+  if (!header || !code || !assignView || !codeView || !title) return;
+
+  header.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span style="color:var(--blue);font-weight:500;">👤 ${escHtml(sub.username)}</span>
       <span style="color:var(--muted);font-size:0.78rem;">${date}</span>
@@ -971,16 +2032,21 @@ async function viewSubmission(id) {
     </div>
     ${sub.note ? `<div style="color:var(--muted);font-size:0.8rem;margin-top:6px;font-style:italic;">💬 ${escHtml(sub.note)}</div>` : ''}
   `;
-  document.getElementById('sub-detail-code').textContent = sub.code;
+  code.textContent = sub.code;
 
-  document.getElementById('submissions-assign-view').style.display = 'none';
-  document.getElementById('submissions-code-view').style.display   = 'block';
-  document.getElementById('submissions-modal-title').textContent   = 'Viewing Submission';
+  assignView.style.display = 'none';
+  codeView.style.display = 'block';
+  title.textContent = 'Viewing Submission';
 }
 
 function backToSubmissionList() {
-  document.getElementById('submissions-code-view').style.display   = 'none';
-  document.getElementById('submissions-assign-view').style.display = 'block';
+  const assignView = document.getElementById('submissions-assign-view');
+  const codeView = document.getElementById('submissions-code-view');
+  const title = document.getElementById('submissions-modal-title');
+  
+  if (assignView) assignView.style.display = 'block';
+  if (codeView) codeView.style.display = 'none';
+  if (title) title.textContent = 'Student Submissions';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -989,17 +2055,21 @@ function backToSubmissionList() {
 function switchSideTab(tab) {
   document.querySelectorAll('.sidebar-tab').forEach(b => b.classList.remove('active'));
   if (tab === 'assignments') {
-    document.getElementById('tab-assignments').classList.add('active');
+    const tabEl = document.getElementById('tab-assignments');
+    if (tabEl) tabEl.classList.add('active');
   } else {
-    document.getElementById('tab-teacher').classList.add('active');
+    const tabEl = document.getElementById('tab-teacher');
+    if (tabEl) tabEl.classList.add('active');
   }
   document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(`panel-${tab}`).classList.add('active');
+  const panel = document.getElementById(`panel-${tab}`);
+  if (panel) panel.classList.add('active');
 }
 
 let toastTimer;
 function toast(msg, type = 'success') {
   const el = document.getElementById('toast');
+  if (!el) return;
   el.textContent = msg;
   el.className = `notification show ${type}`;
   clearTimeout(toastTimer);
@@ -1039,3 +2109,5 @@ window.viewSubmission = viewSubmission;
 window.openFile = openFile;
 window.deleteFile = deleteFile;
 </script>
+</body>
+</html>
