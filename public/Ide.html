@@ -369,6 +369,38 @@
       border: 1px solid rgba(248,81,73,0.25);
     }
 
+    .assignment-status {
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 8px;
+    }
+
+    .status-submitted {
+      color: var(--green);
+      background: rgba(63,185,80,0.1);
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(63,185,80,0.25);
+    }
+
+    .status-in-progress {
+      color: var(--yellow);
+      background: rgba(227,179,65,0.1);
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(227,179,65,0.25);
+    }
+
+    .status-not-started {
+      color: var(--muted);
+      background: rgba(139,148,158,0.1);
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
     /* ── Editor Area ── */
     .editor-area {
       flex: 1;
@@ -674,18 +706,26 @@
 
     /* ── Submit Button ── */
     .btn-submit {
-      background: rgba(188,140,255,0.12);
-      color: var(--purple);
-      border: 1px solid rgba(188,140,255,0.3);
+      background: var(--purple);
+      color: #000;
+      border: none;
       padding: 6px 16px;
       border-radius: 6px;
       cursor: pointer;
       font-family: 'IBM Plex Sans', sans-serif;
       font-size: 0.875rem;
-      font-weight: 500;
-      transition: all 0.15s;
+      font-weight: 600;
+      transition: opacity 0.15s;
     }
-    .btn-submit:hover { background: rgba(188,140,255,0.22); }
+    .btn-submit:hover { opacity: 0.85; }
+
+    .btn-submitted {
+      background: rgba(188,140,255,0.2);
+      color: var(--purple);
+      border: 1px solid rgba(188,140,255,0.3);
+      cursor: default;
+    }
+    .btn-submitted:hover { opacity: 1; }
 
     /* ── Submission Modal ── */
     .submission-list { max-height: 420px; overflow-y: auto; margin-top: 8px; }
@@ -754,6 +794,18 @@
       gap: 4px;
     }
     .back-btn:hover { text-decoration: underline; }
+
+    /* ── Submission History ── */
+    .submission-history {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      background: var(--bg);
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
 
     /* ── Utilities ── */
     .hidden { display: none !important; }
@@ -926,6 +978,7 @@
     <input type="text" id="submit-assign-name" disabled style="opacity:0.6;">
     <label>Note to teacher (optional)</label>
     <textarea id="submit-note" rows="3" placeholder="e.g. I had trouble with the loop on line 5..."></textarea>
+    <div class="submission-history" id="last-submission-info"></div>
     <div class="modal-row">
       <button class="btn-modal-cancel" id="cancel-submit-btn">Cancel</button>
       <button class="btn-modal-save" style="background:var(--purple);" id="confirm-submit-btn">Submit</button>
@@ -1001,6 +1054,8 @@ let username          = '';
 let autoSaveTimer     = null;
 let files             = [];
 let assignments       = [];
+let hasSubmitted      = false;
+let lastSubmission    = null;
 
 const DEFAULT_PYTHON = `# Welcome to the Classroom IDE!\n# Write your code below and press Run (or Ctrl+Enter).\n\nname = input("What is your name? ")\nprint("Hello,", name + "!")\n\nfor i in range(1, 6):\n    print(f"  {i}. Nice to meet you!")\n`;
 const DEFAULT_HTML   = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <style>\n    body { font-family: Arial; padding: 30px; background: #f5f5f5; }\n    h1   { color: #2563eb; }\n  </style>\n</head>\n<body>\n  <h1>Hello, World!</h1>\n  <p>Edit this HTML and press Preview.</p>\n</body>\n</html>`;
@@ -1053,20 +1108,38 @@ const DEFAULT_HTML   = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <style>\n  
 
       // Auto-save on edit
       editor.onDidChangeModelContent(() => {
-        setSaveStatus('');
+        setSaveStatus('● Unsaved');
         clearTimeout(autoSaveTimer);
-        if (currentFileId) {
-          // Saving a regular file
-          autoSaveTimer = setTimeout(() => saveCurrentFile(true), 2000);
-        } else if (currentAssignmentId && userRole === 'student') {
-          // Auto-save assignment progress
-          autoSaveTimer = setTimeout(() => saveAssignmentProgress(true), 2000);
+        
+        // Auto-save after 3 seconds of inactivity
+        autoSaveTimer = setTimeout(() => {
+          if (currentFileId) {
+            saveCurrentFile(true);
+          } else if (currentAssignmentId && userRole === 'student') {
+            saveAssignmentProgress(true);
+          }
+        }, 3000);
+        
+        // If this is an assignment, update the submit button
+        if (currentAssignmentId) {
+          hasSubmitted = false;
+          updateSubmitButton();
         }
       });
     });
 
     await loadAssignments();
     setupEventListeners();
+    
+    // Start periodic save check (every 30 seconds as backup)
+    setInterval(() => {
+      if (currentAssignmentId && userRole === 'student' && editor && !hasSubmitted) {
+        saveAssignmentProgress(true);
+      } else if (currentFileId && editor) {
+        saveCurrentFile(true);
+      }
+    }, 30000);
+    
   } catch (err) {
     console.error('Boot error:', err);
   }
@@ -1128,6 +1201,33 @@ function setupEventListeners() {
       document.getElementById('reg-color').value = btn.dataset.color;
     });
   });
+  
+  // Save before page unload
+  window.addEventListener('beforeunload', (e) => {
+    if (currentAssignmentId && editor && !hasSubmitted) {
+      saveAssignmentProgress(true);
+    } else if (currentFileId && editor) {
+      saveCurrentFile(true);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SUBMIT BUTTON MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function updateSubmitButton() {
+  const submitBtn = document.getElementById('submit-btn');
+  if (!submitBtn) return;
+  
+  if (hasSubmitted) {
+    submitBtn.textContent = '✓ Submitted';
+    submitBtn.classList.add('btn-submitted');
+    submitBtn.disabled = true;
+  } else {
+    submitBtn.textContent = '📤 Submit Assignment';
+    submitBtn.classList.remove('btn-submitted');
+    submitBtn.disabled = false;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1152,7 +1252,7 @@ function switchLang(lang) {
     document.getElementById('output-label').textContent = 'Preview';
   }
 
-  if (!currentFileId) {
+  if (!currentFileId && !currentAssignmentId) {
     monaco.editor.setModelLanguage(editor.getModel(), lang === 'html' ? 'html' : 'python');
     editor.setValue(lang === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML);
   }
@@ -1197,6 +1297,8 @@ async function openFile(id) {
 
   currentFileId = file.id;
   currentFile   = file;
+  currentAssignmentId = null; // Clear assignment context
+  currentAssignmentTitle = '';
 
   const lang = file.language || 'python';
   switchLang(lang);
@@ -1205,6 +1307,7 @@ async function openFile(id) {
 
   document.getElementById('current-file-label').textContent = file.filename;
   setSaveStatus('saved');
+  document.getElementById('submit-btn').classList.add('hidden');
   renderFileList();
 }
 
@@ -1248,11 +1351,11 @@ async function saveCurrentFile(silent = false) {
   });
 
   if (res.ok) {
-    setSaveStatus('saved');
+    setSaveStatus('✓ Saved');
     if (!silent) toast('Saved!', 'success');
     await loadFiles();
   } else {
-    setSaveStatus('error');
+    setSaveStatus('✗ Save error');
     if (!silent) toast('Save failed.', 'error');
   }
 }
@@ -1260,17 +1363,23 @@ async function saveCurrentFile(silent = false) {
 async function saveAssignmentProgress(silent = false) {
   if (!currentAssignmentId || !editor || userRole !== 'student') return;
 
-  const res = await fetch(`/api/progress/${currentAssignmentId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code: editor.getValue() })
-  });
+  try {
+    const res = await fetch(`/api/progress/${currentAssignmentId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: editor.getValue() })
+    });
 
-  if (res.ok) {
-    setSaveStatus('saved');
-  } else {
-    setSaveStatus('error');
-    if (!silent) toast('Could not save progress.', 'error');
+    if (res.ok) {
+      setSaveStatus('✓ Auto-saved');
+      if (!silent) toast('Progress saved!', 'success');
+    } else {
+      setSaveStatus('✗ Save error');
+      if (!silent) toast('Could not save progress.', 'error');
+    }
+  } catch (err) {
+    setSaveStatus('✗ Save error');
+    if (!silent) toast('Network error while saving.', 'error');
   }
 }
 
@@ -1292,8 +1401,11 @@ async function deleteFile(e, id) {
 
 function setSaveStatus(status) {
   const el = document.getElementById('save-status');
-  el.className = 'save-status' + (status === 'saved' ? ' saved' : '');
-  el.textContent = status === 'saved' ? '✓ Saved' : status === 'error' ? '✗ Save error' : '';
+  el.textContent = status;
+  el.className = 'save-status';
+  if (status === '✓ Saved' || status === '✓ Auto-saved') {
+    el.classList.add('saved');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1313,21 +1425,71 @@ function renderAssignments() {
     list.innerHTML = '<div class="empty-state">No assignments posted yet.</div>';
     return;
   }
-  list.innerHTML = visible.map(a => {
-    const hiddenBadge = (!a.visible && userRole === 'teacher') ? '<span class="assign-hidden-badge">hidden</span>' : '';
-    return `
-      <div class="assign-item" onclick="loadAssignment(${a.id})">
-        <div class="assign-top">
-          <span class="assign-title">${escHtml(a.title)}</span>
-          ${hiddenBadge}
-          <span class="assign-lang ${a.language}">${a.language}</span>
-        </div>
-        ${a.description ? `<div class="assign-desc">${escHtml(a.description)}</div>` : ''}
-        <div class="assign-actions">
-          <button class="btn-sm" onclick="loadAssignment(${a.id}); event.stopPropagation();">Open →</button>
-        </div>
-      </div>`;
-  }).join('');
+  
+  // For students, also load submission status
+  const loadStatus = userRole === 'student' ? loadSubmissionStatusForAssignments() : Promise.resolve();
+  
+  loadStatus.then(() => {
+    list.innerHTML = visible.map(a => {
+      const hiddenBadge = (!a.visible && userRole === 'teacher') ? '<span class="assign-hidden-badge">hidden</span>' : '';
+      let statusBadge = '';
+      if (userRole === 'student') {
+        if (a.submitted) {
+          statusBadge = '<span class="status-submitted">✓ Submitted</span>';
+        } else if (a.in_progress) {
+          statusBadge = '<span class="status-in-progress">● In Progress</span>';
+        } else {
+          statusBadge = '<span class="status-not-started">○ Not Started</span>';
+        }
+      }
+      return `
+        <div class="assign-item" onclick="loadAssignment(${a.id})">
+          <div class="assign-top">
+            <span class="assign-title">${escHtml(a.title)}</span>
+            ${hiddenBadge}
+            <span class="assign-lang ${a.language}">${a.language}</span>
+          </div>
+          ${a.description ? `<div class="assign-desc">${escHtml(a.description)}</div>` : ''}
+          <div class="assign-actions" style="justify-content:space-between;">
+            <div class="assignment-status">${statusBadge}</div>
+            <button class="btn-sm" onclick="loadAssignment(${a.id}); event.stopPropagation();">Open →</button>
+          </div>
+        </div>`;
+    }).join('');
+  });
+}
+
+async function loadSubmissionStatusForAssignments() {
+  if (userRole !== 'student') return;
+  
+  try {
+    // Get all submissions for the current user
+    const promises = assignments.map(async a => {
+      const res = await fetch(`/api/submissions/mine/${a.id}`);
+      if (res.ok) {
+        const subs = await res.json();
+        a.submitted = subs.length > 0;
+        a.in_progress = false; // Will be set by checking progress
+      }
+    });
+    
+    await Promise.all(promises);
+    
+    // Also check progress
+    const progressPromises = assignments.map(async a => {
+      const res = await fetch(`/api/progress/${a.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.code && !a.submitted) {
+          a.in_progress = true;
+        }
+      }
+    });
+    
+    await Promise.all(progressPromises);
+  } catch (err) {
+    console.error('Failed to load submission status', err);
+  }
 }
 
 function renderTeacherAssignments() {
@@ -1358,27 +1520,51 @@ async function loadAssignment(id) {
 
   currentAssignmentId    = a.id;
   currentAssignmentTitle = a.title;
+  currentFileId = null; // Clear file context
 
   switchLang(a.language);
   clearTerminal();
 
   // Load student's saved progress if it exists, else use starter code
   if (userRole === 'student') {
+    // Check if already submitted
+    const subRes = await fetch(`/api/submissions/mine/${a.id}`);
+    if (subRes.ok) {
+      const subs = await subRes.json();
+      hasSubmitted = subs.length > 0;
+      lastSubmission = subs[0] || null;
+    }
+    
     const res  = await fetch(`/api/progress/${a.id}`);
     const data = await res.json();
-    if (data.code !== null) {
+    
+    if (hasSubmitted) {
+      // Show the submitted code (last submission)
+      if (lastSubmission) {
+        editor.setValue(lastSubmission.code);
+        toast(`Opened: ${a.title} (previously submitted)`, 'success');
+      } else {
+        editor.setValue(a.starter_code || (a.language === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML));
+      }
+      setSaveStatus('✓ Submitted');
+    } else if (data.code !== null) {
       editor.setValue(data.code);
-      setSaveStatus('saved');
+      setSaveStatus('✓ Auto-saved');
       toast(`Opened: ${a.title} (your work loaded)`, 'success');
     } else {
       editor.setValue(a.starter_code || (a.language === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML));
       setSaveStatus('');
       toast(`Opened: ${a.title}`, 'success');
     }
+    
     document.getElementById('submit-btn').classList.remove('hidden');
+    updateSubmitButton();
+    document.getElementById('current-file-label').textContent = `Assignment: ${a.title}`;
   } else {
     // Teacher just sees starter code
     editor.setValue(a.starter_code || (a.language === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML));
+    document.getElementById('submit-btn').classList.add('hidden');
+    document.getElementById('current-file-label').textContent = `Assignment (teacher): ${a.title}`;
     toast(`Opened: ${a.title}`, 'success');
   }
 }
@@ -1452,7 +1638,7 @@ async function deleteAssignment(id) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  TERMINAL & CODE EXECUTION  (SSE + fetch, no socket.io)
+//  TERMINAL & CODE EXECUTION
 // ═══════════════════════════════════════════════════════════════
 let currentPid  = null;
 let isRunning   = false;
@@ -1468,6 +1654,13 @@ async function runPython() {
 
   const code = editor.getValue();
   if (!code.trim()) return;
+
+  // Auto-save before running
+  if (currentAssignmentId && userRole === 'student' && !hasSubmitted) {
+    await saveAssignmentProgress(true);
+  } else if (currentFileId) {
+    await saveCurrentFile(true);
+  }
 
   clearTerminal();
   isRunning = true;
@@ -1579,6 +1772,7 @@ function handleTerminalInput(e) {
 //  AUTH
 // ═══════════════════════════════════════════════════════════════
 async function doLogout() {
+  // Save before logout
   if (currentFileId && editor) {
     await saveCurrentFile(true);
   } else if (currentAssignmentId && editor && userRole === 'student') {
@@ -1622,8 +1816,20 @@ async function changePassword() {
 // ═══════════════════════════════════════════════════════════════
 function openSubmitModal() {
   if (!currentAssignmentId) { toast('No assignment loaded.', 'error'); return; }
+  if (hasSubmitted) { toast('You have already submitted this assignment.', 'error'); return; }
+  
   document.getElementById('submit-assign-name').value = currentAssignmentTitle;
   document.getElementById('submit-note').value = '';
+  
+  // Show last submission info if any
+  const lastSubInfo = document.getElementById('last-submission-info');
+  if (lastSubmission) {
+    const date = new Date(lastSubmission.submitted_at).toLocaleString();
+    lastSubInfo.innerHTML = `Last submitted: ${date}`;
+  } else {
+    lastSubInfo.innerHTML = '';
+  }
+  
   document.getElementById('submit-modal').classList.add('show');
 }
 
@@ -1634,6 +1840,9 @@ function closeSubmitModal() {
 async function submitAssignment() {
   const code = editor.getValue();
   const note = document.getElementById('submit-note').value.trim();
+
+  // Auto-save before submitting
+  await saveAssignmentProgress(true);
 
   const res = await fetch('/api/submissions', {
     method: 'POST',
@@ -1647,8 +1856,18 @@ async function submitAssignment() {
   });
 
   if (res.ok) {
+    hasSubmitted = true;
+    lastSubmission = {
+      submitted_at: new Date().toISOString(),
+      code,
+      note
+    };
+    updateSubmitButton();
     closeSubmitModal();
     toast('Assignment submitted!', 'success');
+    
+    // Refresh assignment list to show submitted status
+    await loadAssignments();
   } else {
     const data = await res.json();
     toast(data.error || 'Submission failed.', 'error');
@@ -1735,7 +1954,11 @@ function backToSubmissionList() {
 // ═══════════════════════════════════════════════════════════════
 function switchSideTab(tab) {
   document.querySelectorAll('.sidebar-tab').forEach(b => b.classList.remove('active'));
-  document.querySelector(`[onclick*="${tab}"]`).classList.add('active');
+  if (tab === 'assignments') {
+    document.getElementById('tab-assignments').classList.add('active');
+  } else {
+    document.getElementById('tab-teacher').classList.add('active');
+  }
   document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`panel-${tab}`).classList.add('active');
 }
