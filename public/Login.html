@@ -114,8 +114,10 @@
       font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
+      transition: opacity 0.15s;
     }
 
+    .btn:hover { opacity: 0.85; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .error {
@@ -149,6 +151,24 @@
     }
 
     .color-btn.active { border-color: var(--text); }
+
+    .reg-code-hint {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: -8px;
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+
+    .info-text {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      background: var(--bg);
+      border-radius: 6px;
+      border-left: 3px solid var(--blue);
+    }
   </style>
 </head>
 
@@ -167,22 +187,33 @@
     <!-- Login -->
     <div class="form-panel active" id="panel-login">
       <label>Email</label>
-      <input id="login-user" type="text" />
+      <input id="login-user" type="text" placeholder="student@example.com" />
       <label>Password</label>
-      <input id="login-pass" type="password" />
+      <input id="login-pass" type="password" placeholder="••••••••" />
       <button class="btn" id="login-btn">Sign In</button>
     </div>
 
     <!-- Register -->
     <div class="form-panel" id="panel-register">
+      <div class="info-text" id="reg-code-info">
+        📝 Ask your teacher for the class registration code
+      </div>
+      
       <label>First Name</label>
-      <input id="reg-first" type="text" />
+      <input id="reg-first" type="text" placeholder="John" />
+      
       <label>Last Name</label>
-      <input id="reg-last" type="text" />
+      <input id="reg-last" type="text" placeholder="Doe" />
+      
       <label>Email</label>
-      <input id="reg-user" type="text" />
-      <label>Password</label>
-      <input id="reg-pass" type="password" />
+      <input id="reg-user" type="text" placeholder="student@example.com" />
+      
+      <label>Password (min. 8 characters)</label>
+      <input id="reg-pass" type="password" placeholder="••••••••" />
+
+      <label>Class Registration Code</label>
+      <input id="reg-code" type="text" placeholder="Enter code from your teacher" />
+      <div class="reg-code-hint">Required if your teacher has enabled registration codes</div>
 
       <label>Class Color</label>
       <div class="color-picker">
@@ -198,7 +229,7 @@
     </div>
   </div>
 
-<script>
+  <script>
     const errorBox = document.getElementById('error-box');
 
     // Get input elements
@@ -208,6 +239,7 @@
     const regLast = document.getElementById('reg-last');
     const regUser = document.getElementById('reg-user');
     const regPass = document.getElementById('reg-pass');
+    const regCode = document.getElementById('reg-code');
     const regColor = document.getElementById('reg-color');
 
     function showError(msg) {
@@ -229,42 +261,90 @@
     document.getElementById('login-btn').addEventListener('click', async () => {
       const username = loginUser.value.trim();
       const password = loginPass.value;
+      
       if (!username || !password) return showError('Missing fields');
 
-      const res = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
 
-      const data = await res.json();
-      if (!res.ok) return showError(data.error || 'Login failed');
-      location.href = data.role === 'teacher' ? '/teacher.html' : '/Ide.html';
+        const data = await res.json();
+        if (!res.ok) return showError(data.error || 'Login failed');
+        
+        location.href = data.role === 'teacher' ? '/teacher.html' : '/Ide.html';
+      } catch (err) {
+        showError('Network error. Please try again.');
+      }
     });
 
     document.getElementById('register-btn').addEventListener('click', async () => {
-      const body = {
-        first_name: regFirst.value.trim(),
-        last_name: regLast.value.trim(),
-        username: regUser.value.trim(),
-        password: regPass.value,
-        class_color: regColor.value
-      };
-
       // Validate fields
-      if (!body.first_name || !body.last_name || !body.username || !body.password) {
+      const firstName = regFirst.value.trim();
+      const lastName = regLast.value.trim();
+      const username = regUser.value.trim();
+      const password = regPass.value;
+      const classCode = regCode.value.trim();
+
+      if (!firstName || !lastName || !username || !password) {
         return showError('All fields are required');
       }
 
-      const res = await fetch('/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(username)) {
+        return showError('Please enter a valid email address');
+      }
 
-      const data = await res.json();
-      if (!res.ok) return showError(data.error || 'Registration failed');
-      location.href = '/Ide.html';
+      if (password.length < 8) {
+        return showError('Password must be at least 8 characters');
+      }
+
+      // Name validation (letters, spaces, hyphens, apostrophes)
+      const nameRegex = /^[a-zA-Z\s'\-]+$/;
+      if (!nameRegex.test(firstName)) {
+        return showError('First name contains invalid characters');
+      }
+      if (!nameRegex.test(lastName)) {
+        return showError('Last name contains invalid characters');
+      }
+
+      const body = {
+        first_name: firstName,
+        last_name: lastName,
+        username: username,
+        password: password,
+        class_color: regColor.value
+      };
+
+      // Only include class_code if it was provided (server will check if required)
+      if (classCode) {
+        body.class_code = classCode;
+      }
+
+      try {
+        const res = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+        
+        if (!res.ok) {
+          // Special handling for registration code errors
+          if (data.error && data.error.includes('registration code')) {
+            return showError('Invalid class registration code. Please check with your teacher.');
+          }
+          return showError(data.error || 'Registration failed');
+        }
+        
+        location.href = '/Ide.html';
+      } catch (err) {
+        showError('Network error. Please try again.');
+      }
     });
 
     document.querySelectorAll('.color-btn').forEach(btn => {
@@ -274,6 +354,30 @@
         regColor.value = btn.dataset.color;
       });
     });
+
+    // Check if registration code is required by trying a test request
+    (async function checkRegistrationRequirement() {
+      try {
+        // This is a lightweight way to check if registration codes are enabled
+        // We'll make a minimal request that will fail fast but give us the error message
+        const res = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ test: true })
+        });
+        const data = await res.json();
+        
+        // If the error mentions registration code, update the UI
+        if (data.error && data.error.includes('registration code')) {
+          document.getElementById('reg-code-info').innerHTML = 
+            '🔑 <strong>Registration code required</strong> — Ask your teacher for the class code';
+          document.getElementById('reg-code').placeholder = 'Class code is required';
+          document.getElementById('reg-code').required = true;
+        }
+      } catch (err) {
+        // Silently fail - we'll just show the default message
+      }
+    })();
   </script>
 </body>
 </html>
