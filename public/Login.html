@@ -180,6 +180,7 @@
     <div class="tabs">
       <button class="tab active" id="tab-login">Sign In</button>
       <button class="tab" id="tab-register">Register</button>
+      <button class="tab" id="tab-teacher-reg">👩‍🏫 Teacher</button>
     </div>
 
     <div id="error-box" class="error"></div>
@@ -191,6 +192,25 @@
       <label>Password</label>
       <input id="login-pass" type="password" placeholder="••••••••" />
       <button class="btn" id="login-btn">Sign In</button>
+    </div>
+
+
+    <!-- Teacher Registration -->
+    <div class="form-panel" id="panel-teacher-reg">
+      <div class="info-text" style="border-left-color: var(--green);">
+        🔑 Teacher accounts require a registration code from your administrator.
+      </div>
+      <label>First Name</label>
+      <input id="treg-first" type="text" placeholder="Jane" />
+      <label>Last Name</label>
+      <input id="treg-last" type="text" placeholder="Smith" />
+      <label>Email</label>
+      <input id="treg-user" type="email" placeholder="teacher@school.edu" />
+      <label>Password (min. 8 characters)</label>
+      <input id="treg-pass" type="password" placeholder="••••••••" />
+      <label>Teacher Registration Code</label>
+      <input id="treg-code" type="password" placeholder="Code provided by administrator" />
+      <button class="btn" id="teacher-register-btn" style="background: var(--green);">Create Teacher Account</button>
     </div>
 
     <!-- Register -->
@@ -250,13 +270,16 @@
     function switchTab(tab) {
       document.getElementById('tab-login').classList.toggle('active', tab === 'login');
       document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('tab-teacher-reg').classList.toggle('active', tab === 'teacher-reg');
       document.getElementById('panel-login').classList.toggle('active', tab === 'login');
       document.getElementById('panel-register').classList.toggle('active', tab === 'register');
+      document.getElementById('panel-teacher-reg').classList.toggle('active', tab === 'teacher-reg');
       showError('');
     }
 
     document.getElementById('tab-login').addEventListener('click', () => switchTab('login'));
     document.getElementById('tab-register').addEventListener('click', () => switchTab('register'));
+    document.getElementById('tab-teacher-reg').addEventListener('click', () => switchTab('teacher-reg'));
 
     document.getElementById('login-btn').addEventListener('click', async () => {
       const username = loginUser.value.trim();
@@ -378,6 +401,41 @@
         // Silently fail - we'll just show the default message
       }
     })();
+
+    // Teacher registration
+    document.getElementById('teacher-register-btn').addEventListener('click', async () => {
+      const firstName  = document.getElementById('treg-first').value.trim();
+      const lastName   = document.getElementById('treg-last').value.trim();
+      const username   = document.getElementById('treg-user').value.trim();
+      const password   = document.getElementById('treg-pass').value;
+      const teacherCode = document.getElementById('treg-code').value.trim();
+
+      if (!firstName || !lastName || !username || !password || !teacherCode) {
+        return showError('All fields are required');
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(username)) return showError('Please enter a valid email address');
+      if (password.length < 8) return showError('Password must be at least 8 characters');
+
+      try {
+        const res = await fetch('/auth/register-teacher', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            first_name:   firstName,
+            last_name:    lastName,
+            username:     username,
+            password:     password,
+            teacher_code: teacherCode,
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) return showError(data.error || 'Registration failed');
+        location.href = '/teacher.html';
+      } catch (err) {
+        showError('Network error. Please try again.');
+      }
+    });
   </script>
 </body>
 </html>

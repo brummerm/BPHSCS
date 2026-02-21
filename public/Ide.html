@@ -865,6 +865,67 @@
     .notification.show { transform: translateY(0); opacity: 1; }
     .notification.success { border-color: var(--green); color: var(--green); }
     .notification.error   { border-color: var(--red);   color: var(--red); }
+
+    /* ── Turtle Canvas Modal ── */
+    .turtle-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .turtle-modal-overlay.show { display: flex; }
+    .turtle-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column;
+      max-width: 95vw; max-height: 95vh;
+      overflow: hidden;
+    }
+    .turtle-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      flex-shrink: 0;
+    }
+    .turtle-modal-title {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem; font-weight: 700; color: var(--green);
+    }
+    .turtle-modal-controls { display: flex; gap: 8px; align-items: center; }
+    .turtle-close-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer; border-radius: 5px;
+      padding: 4px 10px; font-size: 0.8rem; transition: all 0.15s;
+    }
+    .turtle-close-btn:hover { border-color: var(--red); color: var(--red); }
+    .turtle-save-btn {
+      background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3);
+      color: var(--green); cursor: pointer; border-radius: 5px;
+      padding: 4px 10px; font-size: 0.8rem; transition: all 0.15s;
+    }
+    .turtle-save-btn:hover { background: rgba(63,185,80,0.25); }
+    .turtle-canvas-wrap {
+      padding: 16px; display: flex; justify-content: center; align-items: center;
+      overflow: auto; flex: 1;
+      background: var(--bg);
+    }
+    #turtle-canvas {
+      display: block;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      max-width: 100%; max-height: 70vh;
+      image-rendering: pixelated;
+    }
+    .turtle-status {
+      font-size: 0.72rem; color: var(--muted);
+      padding: 6px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+      font-family: 'Fira Code', monospace;
+    }
   </style>
 </head>
 <body>
@@ -1079,6 +1140,24 @@
     <div class="modal-row" style="margin-top:16px;">
       <button class="btn-modal-cancel" id="close-history-btn">Close</button>
     </div>
+  </div>
+</div>
+
+
+<!-- Turtle Canvas Modal -->
+<div class="turtle-modal-overlay" id="turtle-modal">
+  <div class="turtle-modal">
+    <div class="turtle-modal-header">
+      <span class="turtle-modal-title">🐢 Turtle Graphics Output</span>
+      <div class="turtle-modal-controls">
+        <button class="turtle-save-btn" id="turtle-save-btn" title="Save as PNG">⬇ Save PNG</button>
+        <button class="turtle-close-btn" id="turtle-close-btn">✕ Close</button>
+      </div>
+    </div>
+    <div class="turtle-canvas-wrap">
+      <canvas id="turtle-canvas" width="500" height="500"></canvas>
+    </div>
+    <div class="turtle-status" id="turtle-status">No output yet.</div>
   </div>
 </div>
 
@@ -1884,7 +1963,11 @@ async function runPython() {
 
   es.onmessage = (e) => {
     const { type, text } = JSON.parse(e.data);
-    if (type === 'stdout') appendTerminal(text, 't-stdout');
+    if (type === 'stdout') {
+      const { clean, canvasData } = extractCanvasData(text);
+      if (canvasData) showTurtleCanvas(canvasData);
+      if (clean.trim()) appendTerminal(clean, 't-stdout');
+    }
     else if (type === 'stderr') appendTerminal(text, 't-stderr');
     else if (type === 'done') {
       es.close();
@@ -2226,6 +2309,142 @@ function toast(msg, type = 'success') {
 
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TURTLE CANVAS POPUP
+// ═══════════════════════════════════════════════════════════════
+
+(function initTurtleModal() {
+  const overlay  = document.getElementById('turtle-modal');
+  const closeBtn = document.getElementById('turtle-close-btn');
+  const saveBtn  = document.getElementById('turtle-save-btn');
+
+  if (closeBtn) closeBtn.addEventListener('click', () => overlay.classList.remove('show'));
+  if (overlay)  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('show');
+  });
+  if (saveBtn) saveBtn.addEventListener('click', () => {
+    const canvas = document.getElementById('turtle-canvas');
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = 'turtle_output.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+})();
+
+/**
+ * Parse canvas data out of a raw stdout string.
+ * Removes the __TURTLE_CANVAS__: line from the text and returns
+ * { clean, canvasData } where clean is the text without the marker
+ * and canvasData is the parsed JSON object (or null if not found).
+ */
+function extractCanvasData(text) {
+  const marker = '__TURTLE_CANVAS__:';
+  const idx    = text.indexOf(marker);
+  if (idx === -1) return { clean: text, canvasData: null };
+
+  const lineEnd  = text.indexOf('\n', idx + marker.length);
+  const jsonStr  = lineEnd === -1
+    ? text.slice(idx + marker.length)
+    : text.slice(idx + marker.length, lineEnd);
+
+  // Remove the marker line (and the preceding newline if any) from text
+  const before = text.slice(0, idx > 0 && text[idx - 1] === '\n' ? idx - 1 : idx);
+  const after  = lineEnd === -1 ? '' : text.slice(lineEnd);
+  const clean  = before + after;
+
+  try {
+    return { clean, canvasData: JSON.parse(jsonStr) };
+  } catch (e) {
+    return { clean: text, canvasData: null };
+  }
+}
+
+function showTurtleCanvas(data) {
+  const overlay = document.getElementById('turtle-modal');
+  const canvas  = document.getElementById('turtle-canvas');
+  const status  = document.getElementById('turtle-status');
+  if (!overlay || !canvas) return;
+
+  const w = data.width  || 500;
+  const h = data.height || 500;
+  canvas.width  = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext('2d');
+  const cx  = w / 2;
+  const cy  = h / 2;
+
+  // Coordinate helpers: turtle (0,0)=centre, y-up → canvas y-down
+  const tx = x => cx + x;
+  const ty = y => cy - y;
+
+  // Background
+  ctx.fillStyle = data.bgcolor || '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+
+  let lines = 0, dots = 0, fills = 0, texts = 0;
+
+  for (const cmd of (data.commands || [])) {
+    ctx.save();
+    if (cmd.type === 'bgcolor') {
+      ctx.fillStyle = cmd.color || '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+
+    } else if (cmd.type === 'line') {
+      ctx.beginPath();
+      ctx.moveTo(tx(cmd.x1), ty(cmd.y1));
+      ctx.lineTo(tx(cmd.x2), ty(cmd.y2));
+      ctx.strokeStyle = cmd.color || '#000000';
+      ctx.lineWidth   = cmd.width || 1;
+      ctx.lineCap     = 'round';
+      ctx.lineJoin    = 'round';
+      ctx.stroke();
+      lines++;
+
+    } else if (cmd.type === 'dot') {
+      ctx.beginPath();
+      ctx.arc(tx(cmd.x), ty(cmd.y), Math.max(cmd.radius, 0.5), 0, Math.PI * 2);
+      ctx.fillStyle = cmd.color || '#000000';
+      ctx.fill();
+      dots++;
+
+    } else if (cmd.type === 'fill') {
+      const pts = cmd.points || [];
+      if (pts.length >= 3) {
+        ctx.beginPath();
+        ctx.moveTo(tx(pts[0][0]), ty(pts[0][1]));
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(tx(pts[i][0]), ty(pts[i][1]));
+        }
+        ctx.closePath();
+        ctx.fillStyle = cmd.color || '#000000';
+        ctx.fill();
+        fills++;
+      }
+
+    } else if (cmd.type === 'text') {
+      const font  = cmd.font  || ['Arial', 8, 'normal'];
+      const size  = font[1]   || 8;
+      const style = font[2]   || 'normal';
+      const bold  = style === 'bold' || style === 'bolditalic' ? 'bold ' : '';
+      const ital  = style === 'italic' || style === 'bolditalic' ? 'italic ' : '';
+      ctx.font      = `${ital}${bold}${size}px ${font[0] || 'Arial'}`;
+      ctx.fillStyle = cmd.color || '#000000';
+      ctx.textAlign = cmd.align || 'left';
+      ctx.fillText(cmd.text, tx(cmd.x), ty(cmd.y));
+      texts++;
+    }
+    ctx.restore();
+  }
+
+  if (status) {
+    status.textContent =
+      `${lines} lines · ${dots} dots · ${fills} fills · ${texts} text items  |  ${w}×${h}px`;
+  }
+  overlay.classList.add('show');
 }
 
 // Make functions available globally for any remaining onclick handlers

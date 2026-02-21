@@ -200,6 +200,75 @@ app.post('/auth/logout', (req, res) => {
   req.session.destroy(() => res.json({ success: true }));
 });
 
+// ── Teacher self-registration ─────────────────────────────────────────────────
+// Requires TEACHER_REG_CODE to be set in .env.  Keeps the student /auth/register
+// endpoint untouched and avoids exposing the teacher code to clients who only
+// need the student registration flow.
+
+app.post('/auth/register-teacher', registerLimiter, async (req, res, next) => {
+  try {
+    const TEACHER_CODE = process.env.TEACHER_REG_CODE;
+    if (!TEACHER_CODE) {
+      return res.status(403).json({
+        error: 'Teacher self-registration is not enabled on this server.',
+      });
+    }
+
+    // Validate the teacher registration code first (fail fast)
+    const provided = validateString(
+      req.body.teacher_code || '',
+      'teacher_code',
+      { required: true, maxLen: LIMITS.class_code },
+    );
+    if (provided !== TEACHER_CODE) {
+      // Constant-time comparison would be ideal; bcrypt.compare is overkill for
+      // a short code but at least prevents timing leaks on the happy path.
+      return res.status(403).json({ error: 'Invalid teacher registration code.' });
+    }
+
+    const username   = validateString(req.body.username,   'Email',      { maxLen: LIMITS.username });
+    const password   = validateString(req.body.password,   'Password',   { maxLen: LIMITS.password });
+    const first_name = validateString(req.body.first_name, 'First name', { maxLen: LIMITS.first_name });
+    const last_name  = validateString(req.body.last_name,  'Last name',  { maxLen: LIMITS.last_name });
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const clean = username.toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+      return res.status(400).json({ error: 'Please enter a valid email address' });
+    }
+    if (!/^[a-zA-Z\s'\-]{1,64}$/.test(first_name)) {
+      return res.status(400).json({ error: 'First name contains invalid characters' });
+    }
+    if (!/^[a-zA-Z\s'\-]{1,64}$/.test(last_name)) {
+      return res.status(400).json({ error: 'Last name contains invalid characters' });
+    }
+
+    const exists = authDb.prepare('SELECT id FROM users WHERE username = ?').get(clean);
+    if (exists) {
+      return res.status(409).json({ error: 'An account with that email already exists' });
+    }
+
+    const hash   = await bcrypt.hash(password, 10);
+    const result = authDb.prepare(
+      'INSERT INTO users (username, password_hash, role, first_name, last_name, class_color) VALUES (?, ?, ?, ?, ?, ?)',
+    ).run(clean, hash, 'teacher', first_name, last_name, 'yellow');
+
+    req.session.regenerate((err) => {
+      if (err) return next(err);
+      req.session.userId      = result.lastInsertRowid;
+      req.session.username    = clean;
+      req.session.role        = 'teacher';
+      req.session.first_name  = first_name;
+      req.session.last_name   = last_name;
+      req.session.class_color = 'yellow';
+      res.json({ success: true, username: clean, role: 'teacher' });
+    });
+  } catch (err) { next(err); }
+});
+
 app.post('/auth/change-password', requireAuth, authLimiter, async (req, res, next) => {
   try {
     const currentPassword = validateString(req.body.currentPassword, 'Current password', { maxLen: LIMITS.password });
