@@ -6,6 +6,7 @@ const session      = require('express-session');
 const SQLiteStore  = require('connect-sqlite3')(session);
 const bcrypt       = require('bcrypt');
 const helmet       = require('helmet');
+const DB_DIR = process.env.DB_DIR || '.';
 const { spawn }    = require('child_process');
 const { randomUUID } = require('crypto');   // cryptographically secure IDs
 const fs           = require('fs');
@@ -61,7 +62,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── Session ───────────────────────────────────────────────────────────────────
 app.use(session({
   name:  'cls.sid',   // Non-default name prevents server fingerprinting
-  store: new SQLiteStore({ db: 'sessions.db', dir: '.' }),
+  store: new SQLiteStore({ db: 'sessions.db', dir: DB_DIR }),
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
