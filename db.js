@@ -1,5 +1,6 @@
 const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
+const path = require('path');
 
 // ── Two separate databases ──────────────────────────────────────────────────
 // auth.db  → user accounts only (credentials, roles)
