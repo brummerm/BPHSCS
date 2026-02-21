@@ -38,7 +38,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       // Monaco editor requires inline scripts and styles
-      scriptSrc:  ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      scriptSrc:  ["'self'", "'unsafe-inline'"],
       styleSrc:   ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
       fontSrc:    ["'self'", "https://fonts.gstatic.com"],
       connectSrc: ["'self'"],
