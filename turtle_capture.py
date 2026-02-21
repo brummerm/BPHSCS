@@ -406,7 +406,7 @@ def _output_canvas():
     # Write to the real underlying stdout so it goes through the SSE stream.
     # sandbox_runner stores the original sys.stdout as _tc._REAL_OUT before
     # wrapping it in a LimitedStream.
-    out = getattr(_sys.modules[__name__], '_REAL_OUT', None) or _sys.__stdout__
+    out = _REAL_OUT if _REAL_OUT is not None else _sys.__stdout__
     out.write('\n__TURTLE_CANVAS__:' + payload + '\n')
     out.flush()
 
