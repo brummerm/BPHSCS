@@ -6,7 +6,6 @@ const session      = require('express-session');
 const SQLiteStore  = require('connect-sqlite3')(session);
 const bcrypt       = require('bcrypt');
 const helmet       = require('helmet');
-const DB_DIR = process.env.DB_DIR || '.';
 const { spawn }    = require('child_process');
 const { randomUUID } = require('crypto');   // cryptographically secure IDs
 const fs           = require('fs');
@@ -38,7 +37,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       // Monaco editor requires inline scripts and styles
-      scriptSrc:  ["'self'", "'unsafe-inline'"],
+      scriptSrc:  ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       styleSrc:   ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
       fontSrc:    ["'self'", "https://fonts.gstatic.com"],
       connectSrc: ["'self'"],
@@ -62,7 +61,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── Session ───────────────────────────────────────────────────────────────────
 app.use(session({
   name:  'cls.sid',   // Non-default name prevents server fingerprinting
-  store: new SQLiteStore({ db: 'sessions.db', dir: DB_DIR }),
+  store: new SQLiteStore({ db: 'sessions.db', dir: '.' }),
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -306,35 +305,37 @@ app.get('/api/assignments/:id', requireAuth, (req, res, next) => {
 
 app.post('/api/assignments', requireTeacher, (req, res, next) => {
   try {
-    const title        = validateString(req.body.title,              'title',        { maxLen: LIMITS.title });
-    const description  = validateString(req.body.description  || '', 'description',  { required: false, maxLen: LIMITS.description });
-    const language     = validateString(req.body.language || 'python','language',    { maxLen: LIMITS.language });
-    const starter_code = validateString(req.body.starter_code || '', 'starter_code', { required: false, maxLen: LIMITS.starter_code });
-    const visible      = req.body.visible !== false ? 1 : 0;
-    const validLangs   = ['python', 'html', 'javascript', 'css', 'text'];
-    const lang         = validLangs.includes(language) ? language : 'python';
+    const title          = validateString(req.body.title,              'title',        { maxLen: LIMITS.title });
+    const description    = validateString(req.body.description  || '', 'description',  { required: false, maxLen: LIMITS.description });
+    const language       = validateString(req.body.language || 'python','language',    { maxLen: LIMITS.language });
+    const starter_code   = validateString(req.body.starter_code || '', 'starter_code', { required: false, maxLen: LIMITS.starter_code });
+    const visible        = req.body.visible !== false ? 1 : 0;
+    const allow_resubmit = req.body.allow_resubmit ? 1 : 0;
+    const validLangs     = ['python', 'html', 'javascript', 'css', 'text'];
+    const lang           = validLangs.includes(language) ? language : 'python';
 
     const result = dataDb.prepare(
-      'INSERT INTO assignments (title, description, language, starter_code, visible) VALUES (?, ?, ?, ?, ?)'
-    ).run(title, description, lang, starter_code, visible);
+      'INSERT INTO assignments (title, description, language, starter_code, visible, allow_resubmit) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(title, description, lang, starter_code, visible, allow_resubmit);
     res.json({ success: true, id: result.lastInsertRowid });
   } catch (err) { next(err); }
 });
 
 app.put('/api/assignments/:id', requireTeacher, (req, res, next) => {
   try {
-    const id           = validateId(req.params.id);
-    const title        = validateString(req.body.title,              'title',        { maxLen: LIMITS.title });
-    const description  = validateString(req.body.description  || '', 'description',  { required: false, maxLen: LIMITS.description });
-    const language     = validateString(req.body.language || 'python','language',    { maxLen: LIMITS.language });
-    const starter_code = validateString(req.body.starter_code || '', 'starter_code', { required: false, maxLen: LIMITS.starter_code });
-    const visible      = req.body.visible ? 1 : 0;
-    const validLangs   = ['python', 'html', 'javascript', 'css', 'text'];
-    const lang         = validLangs.includes(language) ? language : 'python';
-    const a            = dataDb.prepare('SELECT id FROM assignments WHERE id = ?').get(id);
+    const id             = validateId(req.params.id);
+    const title          = validateString(req.body.title,              'title',        { maxLen: LIMITS.title });
+    const description    = validateString(req.body.description  || '', 'description',  { required: false, maxLen: LIMITS.description });
+    const language       = validateString(req.body.language || 'python','language',    { maxLen: LIMITS.language });
+    const starter_code   = validateString(req.body.starter_code || '', 'starter_code', { required: false, maxLen: LIMITS.starter_code });
+    const visible        = req.body.visible ? 1 : 0;
+    const allow_resubmit = req.body.allow_resubmit ? 1 : 0;
+    const validLangs     = ['python', 'html', 'javascript', 'css', 'text'];
+    const lang           = validLangs.includes(language) ? language : 'python';
+    const a              = dataDb.prepare('SELECT id FROM assignments WHERE id = ?').get(id);
     if (!a) return res.status(404).json({ error: 'Assignment not found' });
-    dataDb.prepare('UPDATE assignments SET title=?, description=?, language=?, starter_code=?, visible=? WHERE id=?')
-      .run(title, description, lang, starter_code, visible, id);
+    dataDb.prepare('UPDATE assignments SET title=?, description=?, language=?, starter_code=?, visible=?, allow_resubmit=? WHERE id=?')
+      .run(title, description, lang, starter_code, visible, allow_resubmit, id);
     res.json({ success: true });
   } catch (err) { next(err); }
 });
@@ -367,8 +368,20 @@ app.post('/api/submissions', requireAuth, (req, res, next) => {
     const code     = validateString(req.body.code     || '', 'code',     { required: false, maxLen: LIMITS.code });
     const language = validateString(req.body.language || 'python', 'language', { maxLen: LIMITS.language });
     const note     = validateString(req.body.note     || '', 'note',     { required: false, maxLen: LIMITS.note });
-    const assignment = dataDb.prepare('SELECT id FROM assignments WHERE id = ?').get(assignment_id);
+
+    const assignment = dataDb.prepare('SELECT id, allow_resubmit FROM assignments WHERE id = ?').get(assignment_id);
     if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
+
+    // If resubmissions are not allowed, block students who already submitted
+    if (!assignment.allow_resubmit) {
+      const existing = dataDb.prepare(
+        'SELECT id FROM submissions WHERE user_id = ? AND assignment_id = ?'
+      ).get(req.session.userId, assignment_id);
+      if (existing) {
+        return res.status(409).json({ error: 'You have already submitted this assignment and resubmissions are not allowed.' });
+      }
+    }
+
     const result = dataDb.prepare(
       'INSERT INTO submissions (user_id, assignment_id, code, language, note) VALUES (?, ?, ?, ?, ?)'
     ).run(req.session.userId, assignment_id, code, language, note);
