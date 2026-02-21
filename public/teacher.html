@@ -353,6 +353,10 @@
           <input type="checkbox" id="assign-visible" checked>
           <label for="assign-visible">Visible to students immediately after saving</label>
         </div>
+        <div class="visibility-row" style="margin-top:10px;">
+          <input type="checkbox" id="assign-resubmit">
+          <label for="assign-resubmit">Allow students to resubmit after submitting</label>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -548,6 +552,9 @@ function renderAssignments() {
     const hasStarter = a.starter_code && a.starter_code.trim().length > 0;
     const lineCount  = hasStarter ? a.starter_code.trim().split('\n').length : 0;
     const subCount   = allSubs.filter(s => s.assignment_id === a.id).length;
+    const resubmitBadge = a.allow_resubmit
+      ? '<span class="status-badge visible" style="background:rgba(88,166,255,0.1);color:var(--blue);border-color:rgba(88,166,255,0.25);">🔄 Resubmit On</span>'
+      : '';
     return `
     <div class="assign-card ${cardClass}">
       <div class="assign-card-top">
@@ -556,6 +563,7 @@ function renderAssignments() {
             ${escHtml(a.title)}
             <span class="lang-badge ${a.language}">${a.language === 'python' ? '🐍 Python' : '🌐 HTML/CSS'}</span>
             <span class="status-badge ${visClass}">${visLabel}</span>
+            ${resubmitBadge}
           </div>
           ${a.description ? `<div class="assign-card-desc">${escHtml(a.description)}</div>` : ''}
           <div class="assign-card-meta">
@@ -629,12 +637,14 @@ function openAssignModal(editId = null) {
     document.getElementById('assign-language').value    = a.language;
     document.getElementById('assign-starter').value     = a.starter_code || '';
     document.getElementById('assign-visible').checked   = !!a.visible;
+    document.getElementById('assign-resubmit').checked  = !!a.allow_resubmit;
   } else {
     document.getElementById('assign-title').value       = '';
     document.getElementById('assign-description').value = '';
     document.getElementById('assign-language').value    = 'python';
     document.getElementById('assign-starter').value     = '';
     document.getElementById('assign-visible').checked   = true;
+    document.getElementById('assign-resubmit').checked  = false;
   }
   document.getElementById('assign-modal').classList.add('show');
   setTimeout(() => document.getElementById('assign-title').focus(), 100);
@@ -648,11 +658,12 @@ async function saveAssignment() {
   errEl.classList.remove('show');
 
   const body = {
-    title:        document.getElementById('assign-title').value.trim(),
-    description:  document.getElementById('assign-description').value.trim(),
-    language:     document.getElementById('assign-language').value,
-    starter_code: document.getElementById('assign-starter').value,
-    visible:      document.getElementById('assign-visible').checked,
+    title:          document.getElementById('assign-title').value.trim(),
+    description:    document.getElementById('assign-description').value.trim(),
+    language:       document.getElementById('assign-language').value,
+    starter_code:   document.getElementById('assign-starter').value,
+    visible:        document.getElementById('assign-visible').checked,
+    allow_resubmit: document.getElementById('assign-resubmit').checked,
   };
 
   if (!body.title) { errEl.textContent = 'Title is required.'; errEl.classList.add('show'); return; }
