@@ -198,8 +198,17 @@
     </div>
   </div>
 
-  <script>
+<script>
     const errorBox = document.getElementById('error-box');
+
+    // Get input elements
+    const loginUser = document.getElementById('login-user');
+    const loginPass = document.getElementById('login-pass');
+    const regFirst = document.getElementById('reg-first');
+    const regLast = document.getElementById('reg-last');
+    const regUser = document.getElementById('reg-user');
+    const regPass = document.getElementById('reg-pass');
+    const regColor = document.getElementById('reg-color');
 
     function showError(msg) {
       errorBox.textContent = msg;
@@ -241,6 +250,11 @@
         password: regPass.value,
         class_color: regColor.value
       };
+
+      // Validate fields
+      if (!body.first_name || !body.last_name || !body.username || !body.password) {
+        return showError('All fields are required');
+      }
 
       const res = await fetch('/auth/register', {
         method: 'POST',
