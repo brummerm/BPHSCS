@@ -438,6 +438,7 @@ let studentSortDir   = 1; // 1 = asc, -1 = desc
 
     document.getElementById('nav-user-label').textContent = me.username;
     await Promise.all([loadAssignments(), loadStudents(), loadSubmissions()]);
+    renderAssignments(); // render once after all data (including allSubs) is ready
     setupEventListeners();
   } catch (err) {
     console.error('Boot error:', err);
@@ -453,10 +454,8 @@ function setupEventListeners() {
   // Logout
   document.getElementById('logout-btn').addEventListener('click', doLogout);
 
-  // New assignment buttons
+  // New assignment button (only the header button — empty state button is handled in renderAssignments)
   document.getElementById('new-assignment-btn').addEventListener('click', () => openAssignModal());
-  const emptyBtn = document.getElementById('empty-new-assignment-btn');
-  if (emptyBtn) emptyBtn.addEventListener('click', () => openAssignModal());
 
   // Submissions
   document.getElementById('refresh-submissions-btn').addEventListener('click', loadSubmissions);
@@ -698,7 +697,6 @@ async function loadSubmissions() {
   allSubs = await res.json();
   renderSubmissions(allSubs);
   updateStats();
-  renderAssignments(); // refresh submission counts on cards
 }
 
 function populateSubmissionFilter() {
@@ -743,7 +741,7 @@ function renderSubmissions(subs) {
     const note = s.note ? `<span class="sub-card-note">"${escHtml(s.note)}"</span>` : '';
     return `
     <div class="sub-card" id="sub-${s.id}">
-      <div class="sub-card-header" onclick="toggleSubCode(${s.id})">
+      <div class="sub-card-header" data-subid="${s.id}">
         <span class="sub-card-student">${escHtml(s.username)}</span>
         <span class="sub-card-assignment">${escHtml(s.assignment_title)}</span>
         ${note}
@@ -756,6 +754,11 @@ function renderSubmissions(subs) {
       </div>
     </div>`;
   }).join('');
+
+  // Attach click listeners to submission card headers
+  document.querySelectorAll('.sub-card-header').forEach(el => {
+    el.addEventListener('click', () => toggleSubCode(el.dataset.subid));
+  });
 }
 
 function toggleSubCode(id) {
@@ -836,12 +839,12 @@ function renderStudents() {
       <thead>
         <tr>
           <th>#</th>
-          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('last_name')">Name${thArrow('last_name')}</th>
-          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('email')">Email${thArrow('email')}</th>
-          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('color')">Color${thArrow('color')}</th>
-          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('created_at')">Registered${thArrow('created_at')}</th>
-          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('file_count')">Files${thArrow('file_count')}</th>
-          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('submission_count')">Subs${thArrow('submission_count')}</th>
+          <th style="cursor:pointer;user-select:none;" data-sort="last_name">Name${thArrow('last_name')}</th>
+          <th style="cursor:pointer;user-select:none;" data-sort="email">Email${thArrow('email')}</th>
+          <th style="cursor:pointer;user-select:none;" data-sort="color">Color${thArrow('color')}</th>
+          <th style="cursor:pointer;user-select:none;" data-sort="created_at">Registered${thArrow('created_at')}</th>
+          <th style="cursor:pointer;user-select:none;" data-sort="file_count">Files${thArrow('file_count')}</th>
+          <th style="cursor:pointer;user-select:none;" data-sort="submission_count">Subs${thArrow('submission_count')}</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -875,6 +878,11 @@ function renderStudents() {
       </tbody>
     </table>`;
     
+  // Attach sort listeners to table headers
+  wrap.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => sortStudents(th.dataset.sort));
+  });
+
   // Add event listeners to student action buttons
   document.querySelectorAll('.color-student').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1019,9 +1027,8 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Make functions available globally for onclick handlers
-window.sortStudents = sortStudents;
-window.toggleSubCode = toggleSubCode;
+// No inline onclick handlers remain — all listeners attached via addEventListener
+
 </script>
 </body>
 </html>
