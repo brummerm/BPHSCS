@@ -727,6 +727,35 @@
     }
     .btn-submitted:hover { opacity: 1; }
 
+    /* ── History Button ── */
+    .btn-history {
+      background: rgba(88,166,255,0.1);
+      color: var(--blue);
+      border: 1px solid rgba(88,166,255,0.25);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .btn-history:hover { background: rgba(88,166,255,0.2); }
+
+    /* ── History Modal ── */
+    .history-entry { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+    .history-entry-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; flex-wrap: wrap; }
+    .history-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+    .history-time { font-size: 0.78rem; color: var(--muted); flex: 1; }
+    .history-note { font-size: 0.75rem; color: var(--yellow); font-style: italic; flex-basis: 100%; padding-left: 2px; margin-top: 2px; }
+    .history-load-btn { background: rgba(88,166,255,0.1); color: var(--blue); border: 1px solid rgba(88,166,255,0.25); border-radius: 5px; padding: 4px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s; flex-shrink: 0; }
+    .history-load-btn:hover { background: rgba(88,166,255,0.25); }
+    .history-code-preview { padding: 8px 14px 12px; border-top: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); white-space: pre; overflow: hidden; max-height: 80px; position: relative; line-height: 1.5; }
+    .history-code-preview::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 28px; background: linear-gradient(transparent, var(--bg)); }
+    .history-list-scroll { max-height: 440px; overflow-y: auto; }
+    .history-list-scroll::-webkit-scrollbar { width: 4px; }
+    .history-list-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
     /* ── Submission Modal ── */
     .submission-list { max-height: 420px; overflow-y: auto; margin-top: 8px; }
     .submission-list::-webkit-scrollbar { width: 4px; }
@@ -904,6 +933,7 @@
       <button class="btn-save" id="save-btn">💾 Save</button>
       <span class="save-status" id="save-status"></span>
       <button class="btn-submit hidden" id="submit-btn">📤 Submit Assignment</button>
+      <button class="btn-history hidden" id="history-btn">📋 My Submissions (<span id="history-count">0</span>)</button>
       <span class="run-hint">Ctrl + Enter</span>
     </div>
   </div>
@@ -960,6 +990,10 @@
     <div class="visibility-row">
       <input type="checkbox" id="assign-visible" checked>
       <label for="assign-visible">Visible to students</label>
+    </div>
+    <div class="visibility-row" style="margin-top:6px;">
+      <input type="checkbox" id="assign-resubmit">
+      <label for="assign-resubmit">Allow students to resubmit</label>
     </div>
 
     <div class="modal-row">
@@ -1036,6 +1070,18 @@
   </div>
 </div>
 
+<!-- Student: Submission History Modal -->
+<div class="modal-overlay" id="history-modal">
+  <div class="modal" style="max-width:680px;">
+    <h2 id="history-modal-title">📋 My Submission History</h2>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;">Your past submissions for this assignment. Click "Load" to restore any version into the editor.</p>
+    <div class="history-list-scroll" id="history-list"></div>
+    <div class="modal-row" style="margin-top:16px;">
+      <button class="btn-modal-cancel" id="close-history-btn">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Notification Toast -->
 <div class="notification" id="toast"></div>
 
@@ -1057,6 +1103,7 @@ let files             = [];
 let assignments       = [];
 let hasSubmitted      = false;
 let lastSubmission    = null;
+let mySubmissions     = [];  // all student submissions for current assignment
 
 const DEFAULT_PYTHON = `# Welcome to the Classroom IDE!\n# Write your code below and press Run (or Ctrl+Enter).`;
 const DEFAULT_HTML   = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <style>\n    body { font-family: Arial; padding: 30px; background: #f5f5f5; }\n    h1   { color: #2563eb; }\n  </style>\n</head>\n<body>\n  <h1>Hello, World!</h1>\n  <p>Edit this HTML and press Preview.</p>\n</body>\n</html>`;
@@ -1179,6 +1226,8 @@ function setupEventListeners() {
   if (previewBtn) previewBtn.addEventListener('click', previewHTML);
   if (saveBtn) saveBtn.addEventListener('click', () => saveCurrentFile());
   if (submitBtn) submitBtn.addEventListener('click', openSubmitModal);
+  const historyBtn = document.getElementById('history-btn');
+  if (historyBtn) historyBtn.addEventListener('click', openHistoryModal);
   if (clearTerminalBtn) clearTerminalBtn.addEventListener('click', clearTerminal);
   if (newAssignmentBtn) newAssignmentBtn.addEventListener('click', () => openAssignmentModal());
   if (viewSubmissionsBtn) viewSubmissionsBtn.addEventListener('click', openSubmissionsModal);
@@ -1202,6 +1251,8 @@ function setupEventListeners() {
   if (backToListBtn) backToListBtn.addEventListener('click', backToSubmissionList);
   if (closeSubmissionsBtn) closeSubmissionsBtn.addEventListener('click', closeSubmissionsModal);
   if (cancelPwBtn) cancelPwBtn.addEventListener('click', closePasswordModal);
+  const closeHistoryBtn = document.getElementById('close-history-btn');
+  if (closeHistoryBtn) closeHistoryBtn.addEventListener('click', closeHistoryModal);
   if (updatePwBtn) updatePwBtn.addEventListener('click', changePassword);
 
   // Terminal input
@@ -1223,6 +1274,73 @@ function setupEventListeners() {
       saveCurrentFile(true);
     }
   });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SUBMISSION HISTORY — STUDENT
+// ═══════════════════════════════════════════════════════════════
+function updateHistoryButton() {
+  const btn = document.getElementById('history-btn');
+  const countEl = document.getElementById('history-count');
+  if (!btn || !countEl) return;
+  if (mySubmissions.length > 0) {
+    btn.classList.remove('hidden');
+    countEl.textContent = mySubmissions.length;
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+
+function openHistoryModal() {
+  const list = document.getElementById('history-list');
+  const title = document.getElementById('history-modal-title');
+  if (!list) return;
+
+  if (title) title.textContent = `📋 My Submissions — ${currentAssignmentTitle}`;
+
+  if (!mySubmissions.length) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;padding:12px 0;">No submissions yet.</div>';
+  } else {
+    list.innerHTML = mySubmissions.map((s, i) => {
+      const num = mySubmissions.length - i;
+      const date = new Date(s.submitted_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const preview = (s.code || '').split('\n').slice(0, 5).join('\n');
+      return `
+        <div class="history-entry">
+          <div class="history-entry-header">
+            <span class="history-badge">Submission #${num}</span>
+            <span class="history-time">${date}</span>
+            <button class="history-load-btn" data-sub-index="${i}">Load into editor</button>
+            ${s.note ? `<span class="history-note">💬 ${escHtml(s.note)}</span>` : ''}
+          </div>
+          ${preview ? `<div class="history-code-preview">${escHtml(preview)}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    // Wire up load buttons
+    list.querySelectorAll('.history-load-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const idx = parseInt(this.dataset.subIndex);
+        loadSubmissionIntoEditor(idx);
+      });
+    });
+  }
+
+  document.getElementById('history-modal').classList.add('show');
+}
+
+function closeHistoryModal() {
+  document.getElementById('history-modal').classList.remove('show');
+}
+
+function loadSubmissionIntoEditor(index) {
+  const sub = mySubmissions[index];
+  if (!sub) return;
+  editor.setValue(sub.code || '');
+  setSaveStatus('● Loaded from history');
+  closeHistoryModal();
+  const num = mySubmissions.length - index;
+  toast(`Loaded submission #${num} into editor`, 'success');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1544,34 +1662,43 @@ async function loadAssignment(id) {
   currentAssignmentTitle = a.title;
   currentAssignmentAllowResubmit = !!a.allow_resubmit;
   currentFileId = null; // Clear file context
+  mySubmissions  = [];   // Reset until fetched below
+  hasSubmitted   = false;
+  lastSubmission = null;
 
   switchLang(a.language);
   clearTerminal();
 
   // Load student's saved progress if it exists, else use starter code
   if (userRole === 'student') {
-    // Check if already submitted
-    const subRes = await fetch(`/api/submissions/mine/${a.id}`);
+    // Fetch all past submissions AND in-progress work in parallel
+    const [subRes, progressRes] = await Promise.all([
+      fetch(`/api/submissions/mine/${a.id}`),
+      fetch(`/api/progress/${a.id}`)
+    ]);
+
     if (subRes.ok) {
-      const subs = await subRes.json();
-      hasSubmitted = subs.length > 0;
-      lastSubmission = subs[0] || null;
+      mySubmissions = await subRes.json();
+      hasSubmitted = mySubmissions.length > 0;
+      lastSubmission = mySubmissions[0] || null;
     }
-    
-    const res  = await fetch(`/api/progress/${a.id}`);
-    const data = await res.json();
-    
-    if (hasSubmitted) {
-      // Show the submitted code (last submission)
-      if (lastSubmission) {
-        editor.setValue(lastSubmission.code);
-        toast(`Opened: ${a.title} (previously submitted)`, 'success');
-      } else {
-        editor.setValue(a.starter_code || (a.language === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML));
-      }
+    const progressData = progressRes.ok ? await progressRes.json() : { code: null };
+
+    // Editor loading priority:
+    //  1. If resubmit allowed + has in-progress work → show in-progress (student is still editing)
+    //  2. If submitted (no resubmit / no progress)  → show last submitted code (read-only feel)
+    //  3. If in-progress work exists (not submitted) → show that
+    //  4. Fallback: starter code
+    if (a.allow_resubmit && progressData.code !== null) {
+      editor.setValue(progressData.code);
+      setSaveStatus('✓ Auto-saved');
+      toast(`Opened: ${a.title} (draft loaded — resubmit enabled)`, 'success');
+    } else if (hasSubmitted && lastSubmission) {
+      editor.setValue(lastSubmission.code || '');
       setSaveStatus('✓ Submitted');
-    } else if (data.code !== null) {
-      editor.setValue(data.code);
+      toast(`Opened: ${a.title} (last submission loaded)`, 'success');
+    } else if (progressData.code !== null) {
+      editor.setValue(progressData.code);
       setSaveStatus('✓ Auto-saved');
       toast(`Opened: ${a.title} (your work loaded)`, 'success');
     } else {
@@ -1579,13 +1706,14 @@ async function loadAssignment(id) {
       setSaveStatus('');
       toast(`Opened: ${a.title}`, 'success');
     }
-    
+
     const submitBtn = document.getElementById('submit-btn');
     const currentFileLabel = document.getElementById('current-file-label');
-    
+
     if (submitBtn) submitBtn.classList.remove('hidden');
     if (currentFileLabel) currentFileLabel.textContent = `Assignment: ${a.title}`;
     updateSubmitButton();
+    updateHistoryButton();
   } else {
     // Teacher just sees starter code
     editor.setValue(a.starter_code || (a.language === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML));
@@ -1593,6 +1721,8 @@ async function loadAssignment(id) {
     const currentFileLabel = document.getElementById('current-file-label');
     
     if (submitBtn) submitBtn.classList.add('hidden');
+    const histBtn = document.getElementById('history-btn');
+    if (histBtn) histBtn.classList.add('hidden');
     if (currentFileLabel) currentFileLabel.textContent = `Assignment (teacher): ${a.title}`;
     toast(`Opened: ${a.title}`, 'success');
   }
@@ -1615,6 +1745,7 @@ function openAssignmentModal(editId = null) {
   editIdEl.value = editId || '';
   titleEl.textContent = editId ? 'Edit Assignment' : 'New Assignment';
 
+  const resubmitCheck = document.getElementById('assign-resubmit');
   if (editId) {
     const a = assignments.find(x => x.id === editId);
     if (a) {
@@ -1623,6 +1754,7 @@ function openAssignmentModal(editId = null) {
       langSelect.value = a.language;
       starterInput.value = a.starter_code;
       visibleCheck.checked = !!a.visible;
+      if (resubmitCheck) resubmitCheck.checked = !!a.allow_resubmit;
     }
   } else {
     titleInput.value = '';
@@ -1630,6 +1762,7 @@ function openAssignmentModal(editId = null) {
     langSelect.value = 'python';
     starterInput.value = '';
     visibleCheck.checked = true;
+    if (resubmitCheck) resubmitCheck.checked = false;
   }
 
   modal.classList.add('show');
@@ -1650,12 +1783,14 @@ async function saveAssignment() {
   
   if (!titleInput || !descInput || !langSelect || !starterInput || !visibleCheck) return;
   
+  const resubmitCheck = document.getElementById('assign-resubmit');
   const body = {
-    title:        titleInput.value.trim(),
-    description:  descInput.value.trim(),
-    language:     langSelect.value,
-    starter_code: starterInput.value,
-    visible:      visibleCheck.checked,
+    title:          titleInput.value.trim(),
+    description:    descInput.value.trim(),
+    language:       langSelect.value,
+    starter_code:   starterInput.value,
+    visible:        visibleCheck.checked,
+    allow_resubmit: resubmitCheck ? resubmitCheck.checked : false,
   };
 
   if (!body.title) { toast('Title is required.', 'error'); return; }
@@ -1935,16 +2070,17 @@ async function submitAssignment() {
   });
 
   if (res.ok) {
+    const result = await res.json();
+    const newSub = { id: result.id, submitted_at: new Date().toISOString(), code, note, language: currentLang };
+    // Prepend to local submissions list so newest is always first
+    mySubmissions = [newSub, ...mySubmissions];
     hasSubmitted = true;
-    lastSubmission = {
-      submitted_at: new Date().toISOString(),
-      code,
-      note
-    };
+    lastSubmission = newSub;
     updateSubmitButton();
+    updateHistoryButton();
     closeSubmitModal();
     toast('Assignment submitted!', 'success');
-    
+
     // Refresh assignment list to show submitted status
     await loadAssignments();
   } else {
