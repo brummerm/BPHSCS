@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Syllabus – Computer Science</title>
   <!-- cloudflare email obfuscation breaks inline scripts — disable via page rule or use data-cfasync="false" -->
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:      #0d1117; --surface: #161b22; --surface2:#1c2128;
@@ -14,7 +14,7 @@
       --red:     #f85149; --yellow:  #e3b341;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
     .banner { background: var(--surface); border-bottom: 1px solid var(--border); }
     .banner a { display: block; }
     .banner img { width: 100%; max-height: 160px; object-fit: cover; display: block; }
@@ -24,16 +24,16 @@
     nav a { display: block; color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 500; padding: 0.85rem 0.9rem; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
     nav a:hover { color: var(--text); }
     nav a.active { color: var(--text); border-bottom-color: var(--green); }
-    nav a.ide-link { color: var(--green); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.8rem; background: rgba(63,185,80,0.1); border-radius: 6px; margin: 0.5rem 0.4rem; padding: 0.35rem 0.8rem; border-bottom: none; }
+    nav a.ide-link { color: var(--green); font-family: 'Fira Code', monospace; font-weight: 700; font-size: 0.8rem; background: rgba(63,185,80,0.1); border-radius: 6px; margin: 0.5rem 0.4rem; padding: 0.35rem 0.8rem; border-bottom: none; }
     nav a.ide-link:hover { background: rgba(63,185,80,0.2); }
     main { flex: 1; max-width: 900px; width: 100%; margin: 0 auto; padding: 2rem 1.5rem; }
     .page-header { margin-bottom: 2rem; }
-    .page-header h1 { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; color: var(--text); margin-bottom: 0.25rem; }
+    .page-header h1 { font-family: 'Fira Code', monospace; font-size: 1.4rem; color: var(--text); margin-bottom: 0.25rem; }
     .page-header p { color: var(--muted); font-size: 0.85rem; }
     .section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
     .section-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; cursor: pointer; user-select: none; }
     .section-header:hover { background: var(--surface2); }
-    .section-header h2 { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 700; color: var(--blue); }
+    .section-header h2 { font-family: 'Fira Code', monospace; font-size: 0.9rem; font-weight: 700; color: var(--blue); }
     .section-header .chevron { color: var(--muted); font-size: 0.9rem; transition: transform 0.2s; }
     .section.open .chevron { transform: rotate(90deg); }
     .section-body { padding: 0 1.25rem; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; }
@@ -41,18 +41,18 @@
     .section-body p { color: var(--muted); font-size: 0.875rem; line-height: 1.7; margin-bottom: 0.6rem; }
     .section-body p strong { color: var(--text); }
     .sub-section { margin-top: 1rem; margin-bottom: 0.5rem; }
-    .sub-section h3 { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--green); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .sub-section h3 { font-family: 'Fira Code', monospace; font-size: 0.8rem; font-weight: 700; color: var(--green); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .item-list { list-style: none; padding: 0; }
     .item-list li { font-size: 0.875rem; color: var(--muted); padding: 0.3rem 0; padding-left: 1rem; position: relative; line-height: 1.6; }
     .item-list li::before { content: '›'; position: absolute; left: 0; color: var(--blue); }
     .grading-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-top: 0.5rem; }
     .grade-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; text-align: center; }
-    .grade-item .pct { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 700; color: var(--green); }
+    .grade-item .pct { font-family: 'Fira Code', monospace; font-size: 1.4rem; font-weight: 700; color: var(--green); }
     .grade-item .label { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
     footer { background: var(--surface); border-top: 1px solid var(--border); text-align: center; padding: 1.5rem; color: var(--muted); font-size: 0.8rem; }
     footer a { color: var(--blue); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
-    footer .brand { font-family: 'JetBrains Mono', monospace; color: var(--green); font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; }
+    footer .brand { font-family: 'Fira Code', monospace; color: var(--green); font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; }
     @media (max-width: 640px) { nav ul { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; } }
   </style>
 </head>

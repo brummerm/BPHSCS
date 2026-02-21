@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Resources – Computer Science</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;
@@ -13,7 +13,7 @@
       --red:#f85149;--yellow:#e3b341;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
     .banner{background:var(--surface);border-bottom:1px solid var(--border);}
     .banner a{display:block;}
     .banner img{width:100%;max-height:160px;object-fit:cover;display:block;}
@@ -23,16 +23,16 @@
     nav a{display:block;color:var(--muted);text-decoration:none;font-size:0.85rem;font-weight:500;padding:0.85rem 0.9rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
     nav a:hover{color:var(--text);}
     nav a.active{color:var(--text);border-bottom-color:var(--green);}
-    nav a.ide-link{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.8rem;background:rgba(63,185,80,.1);border-radius:6px;margin:.5rem .4rem;padding:.35rem .8rem;border-bottom:none;}
+    nav a.ide-link{color:var(--green);font-family:'Fira Code',monospace;font-weight:700;font-size:0.8rem;background:rgba(63,185,80,.1);border-radius:6px;margin:.5rem .4rem;padding:.35rem .8rem;border-bottom:none;}
     nav a.ide-link:hover{background:rgba(63,185,80,.2);}
     main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:2rem 1.5rem;}
     .page-header{margin-bottom:1.5rem;}
-    .page-header h1{font-family:'JetBrains Mono',monospace;font-size:1.4rem;color:var(--text);margin-bottom:.25rem;}
+    .page-header h1{font-family:'Fira Code',monospace;font-size:1.4rem;color:var(--text);margin-bottom:.25rem;}
     .page-header p{color:var(--muted);font-size:.875rem;}
 
     /* Search */
     .search-row{display:flex;gap:.5rem;margin-bottom:1.5rem;}
-    .search-row input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.55rem .9rem;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:.875rem;outline:none;}
+    .search-row input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.55rem .9rem;color:var(--text);font-family:'Inter',sans-serif;font-size:.875rem;outline:none;}
     .search-row input:focus{border-color:var(--blue);}
     .search-row input::placeholder{color:var(--muted);}
     .search-row button{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.55rem 1rem;font-size:.875rem;cursor:pointer;transition:background .15s;}
@@ -40,7 +40,7 @@
 
     /* Tabs */
     .tabs{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:1.5rem;flex-wrap:wrap;}
-    .tab-btn{flex:1;min-width:120px;padding:.45rem .75rem;background:none;border:none;color:var(--muted);font-family:'IBM Plex Sans',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;border-radius:6px;transition:all .15s;}
+    .tab-btn{flex:1;min-width:120px;padding:.45rem .75rem;background:none;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;border-radius:6px;transition:all .15s;}
     .tab-btn:hover{color:var(--text);}
     .tab-btn.active{background:var(--surface);color:var(--text);border:1px solid var(--border);}
 
@@ -50,7 +50,7 @@
 
     /* Resource cards */
     .res-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1rem;}
-    .res-card h2{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--blue);margin-bottom:.75rem;}
+    .res-card h2{font-family:'Fira Code',monospace;font-size:1rem;font-weight:700;color:var(--blue);margin-bottom:.75rem;}
     .res-card h3{font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;margin-top:.9rem;}
     .res-list{list-style:none;padding:0;}
     .res-list li{padding:.35rem 0;border-bottom:1px solid var(--surface2);font-size:.875rem;color:var(--muted);}
@@ -62,7 +62,7 @@
     .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem;}
     .tool-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.25rem;display:flex;flex-direction:column;transition:border-color .15s,transform .15s;}
     .tool-card:hover{border-color:var(--blue);transform:translateY(-2px);}
-    .tool-card h3{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:.5rem;}
+    .tool-card h3{font-family:'Fira Code',monospace;font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:.5rem;}
     .tool-card p{font-size:.83rem;color:var(--muted);flex:1;line-height:1.6;margin-bottom:.9rem;}
     .tool-link{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--blue);padding:.4rem .9rem;font-size:.8rem;font-weight:600;text-decoration:none;transition:background .15s,border-color .15s;}
     .tool-link:hover{background:rgba(88,166,255,.1);border-color:var(--blue);}
@@ -73,7 +73,7 @@
     .help-icon{font-size:1.2rem;flex-shrink:0;}
     .help-name{color:var(--text);font-weight:500;}
     .help-meta{color:var(--muted);font-size:.8rem;margin-top:.15rem;}
-    .section-label{font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:.25rem 0 .75rem;}
+    .section-label{font-family:'Fira Code',monospace;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:.25rem 0 .75rem;}
 
     /* Lecture link */
     .lecture-link{display:flex;align-items:center;gap:.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;text-decoration:none;color:var(--text);transition:border-color .15s,background .15s;}
@@ -86,7 +86,7 @@
     footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:1.5rem;color:var(--muted);font-size:.8rem;}
     footer a{color:var(--blue);text-decoration:none;}
     footer a:hover{text-decoration:underline;}
-    footer .brand{font-family:'JetBrains Mono',monospace;color:var(--green);font-size:.85rem;font-weight:700;margin-bottom:.4rem;}
+    footer .brand{font-family:'Fira Code',monospace;color:var(--green);font-size:.85rem;font-weight:700;margin-bottom:.4rem;}
     @media(max-width:640px){nav ul{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;}.tabs{flex-direction:column;}.tab-btn{min-width:unset;}}
   </style>
 </head>

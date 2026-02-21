@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Classroom IDE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     /* Fallback fonts if offline */
-    @font-face { font-family: 'JetBrains Mono'; src: local('Courier New'); }
-    @font-face { font-family: 'IBM Plex Sans'; src: local('Arial'); }
+    @font-face { font-family: 'Fira Code'; src: local('Courier New'); }
+    @font-face { font-family: 'Inter'; src: local('Arial'); }
   </style>
   <script src="/vs/loader.js"></script>
   <style>
@@ -34,7 +34,7 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -55,7 +55,7 @@
     }
 
     .topbar-brand {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 0.85rem;
       font-weight: 700;
       color: var(--green);
@@ -76,7 +76,7 @@
       border: none;
       background: none;
       color: var(--muted);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.8rem;
       font-weight: 500;
       cursor: pointer;
@@ -93,7 +93,7 @@
     .spacer { flex: 1; }
 
     .topbar-file-label {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 0.8rem;
       color: var(--muted);
       background: var(--bg);
@@ -132,7 +132,7 @@
       border: 1px solid var(--border);
       background: var(--surface2);
       color: var(--text);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.15s;
@@ -171,7 +171,7 @@
       background: none;
       border: none;
       color: var(--muted);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.78rem;
       font-weight: 500;
       cursor: pointer;
@@ -248,7 +248,7 @@
     .file-info { flex: 1; min-width: 0; }
 
     .file-name {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 0.8rem;
       color: var(--text);
       white-space: nowrap;
@@ -295,7 +295,7 @@
       border-radius: 5px;
       padding: 6px 8px;
       color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 0.78rem;
       outline: none;
     }
@@ -431,7 +431,7 @@
       padding: 7px 20px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.875rem;
       font-weight: 600;
       transition: opacity 0.15s, transform 0.1s;
@@ -447,7 +447,7 @@
       padding: 7px 20px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.875rem;
       font-weight: 600;
       transition: opacity 0.15s;
@@ -462,7 +462,7 @@
       padding: 6px 16px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.875rem;
       font-weight: 500;
       transition: all 0.15s;
@@ -537,7 +537,7 @@
     #terminal-output {
       flex: 1;
       padding: 12px 14px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 0.82rem;
       line-height: 1.6;
       overflow-y: auto;
@@ -567,7 +567,7 @@
 
     .terminal-prompt {
       color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 1rem;
       user-select: none;
       transition: color 0.15s;
@@ -579,7 +579,7 @@
       border: none;
       outline: none;
       color: var(--green);
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 0.82rem;
       caret-color: var(--green);
     }
@@ -641,7 +641,7 @@
       border-radius: 6px;
       padding: 9px 12px;
       color: var(--text);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.875rem;
       outline: none;
       margin-bottom: 14px;
@@ -650,7 +650,7 @@
     .modal textarea {
       resize: vertical;
       min-height: 80px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 0.82rem;
     }
 
@@ -672,7 +672,7 @@
       padding: 8px 18px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.875rem;
     }
 
@@ -683,7 +683,7 @@
       padding: 8px 18px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.875rem;
       font-weight: 600;
     }
@@ -712,7 +712,7 @@
       padding: 6px 16px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.875rem;
       font-weight: 600;
       transition: opacity 0.15s;
@@ -735,7 +735,7 @@
       padding: 6px 14px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.82rem;
       font-weight: 500;
       transition: all 0.15s;
@@ -745,12 +745,12 @@
     /* ── History Modal ── */
     .history-entry { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
     .history-entry-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; flex-wrap: wrap; }
-    .history-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+    .history-badge { font-family: 'Fira Code', monospace; font-size: 0.7rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
     .history-time { font-size: 0.78rem; color: var(--muted); flex: 1; }
     .history-note { font-size: 0.75rem; color: var(--yellow); font-style: italic; flex-basis: 100%; padding-left: 2px; margin-top: 2px; }
     .history-load-btn { background: rgba(88,166,255,0.1); color: var(--blue); border: 1px solid rgba(88,166,255,0.25); border-radius: 5px; padding: 4px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s; flex-shrink: 0; }
     .history-load-btn:hover { background: rgba(88,166,255,0.25); }
-    .history-code-preview { padding: 8px 14px 12px; border-top: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); white-space: pre; overflow: hidden; max-height: 80px; position: relative; line-height: 1.5; }
+    .history-code-preview { padding: 8px 14px 12px; border-top: 1px solid var(--border); font-family: 'Fira Code', monospace; font-size: 0.72rem; color: var(--muted); white-space: pre; overflow: hidden; max-height: 80px; position: relative; line-height: 1.5; }
     .history-code-preview::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 28px; background: linear-gradient(transparent, var(--bg)); }
     .history-list-scroll { max-height: 440px; overflow-y: auto; }
     .history-list-scroll::-webkit-scrollbar { width: 4px; }
@@ -781,7 +781,7 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 12px;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       font-size: 0.78rem;
       line-height: 1.6;
       white-space: pre-wrap;
@@ -804,7 +804,7 @@
       border-radius: 6px;
       padding: 7px 10px;
       color: var(--text);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 0.875rem;
       outline: none;
     }
@@ -1142,7 +1142,7 @@ const DEFAULT_HTML   = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <style>\n  
         language: 'python',
         theme: 'vs-dark',
         fontSize: 14,
-        fontFamily: "'JetBrains Mono', monospace",
+        fontFamily: "'Fira Code', monospace",
         minimap: { enabled: false },
         automaticLayout: true,
         wordWrap: 'on',

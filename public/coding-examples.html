@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Coding Examples – Computer Science</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;
@@ -13,7 +13,7 @@
       --red:#f85149;--yellow:#e3b341;--orange:#f0883e;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
     .banner{background:var(--surface);border-bottom:1px solid var(--border);}
     .banner a{display:block;}
     .banner img{width:100%;max-height:160px;object-fit:cover;display:block;}
@@ -23,11 +23,11 @@
     nav a{display:block;color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;padding:.85rem .9rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
     nav a:hover{color:var(--text);}
     nav a.active{color:var(--text);border-bottom-color:var(--green);}
-    nav a.ide-link{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.8rem;background:rgba(63,185,80,.1);border-radius:6px;margin:.5rem .4rem;padding:.35rem .8rem;border-bottom:none;}
+    nav a.ide-link{color:var(--green);font-family:'Fira Code',monospace;font-weight:700;font-size:.8rem;background:rgba(63,185,80,.1);border-radius:6px;margin:.5rem .4rem;padding:.35rem .8rem;border-bottom:none;}
     nav a.ide-link:hover{background:rgba(63,185,80,.2);}
     main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:2rem 1.5rem;}
     .page-header{margin-bottom:1.5rem;}
-    .page-header h1{font-family:'JetBrains Mono',monospace;font-size:1.4rem;color:var(--text);margin-bottom:.25rem;}
+    .page-header h1{font-family:'Fira Code',monospace;font-size:1.4rem;color:var(--text);margin-bottom:.25rem;}
     .page-header p{color:var(--muted);font-size:.875rem;}
 
     /* Layout */
@@ -36,7 +36,7 @@
     /* Sidebar */
     .sidebar{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow-y:auto;}
     .sidebar-section{padding:.5rem 0;}
-    .sidebar-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:.4rem .9rem;display:flex;align-items:center;gap:.4rem;}
+    .sidebar-label{font-family:'Fira Code',monospace;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:.4rem .9rem;display:flex;align-items:center;gap:.4rem;}
     .sidebar-label::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;}
     .sidebar-label.python::before{background:var(--blue);}
     .sidebar-label.html-label::before{background:var(--orange);}
@@ -48,16 +48,16 @@
     /* Code area */
     .code-area{background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;}
     .code-topbar{display:flex;align-items:center;gap:.75rem;padding:.55rem .9rem;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;}
-    .file-tab{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:.2rem .65rem;}
+    .file-tab{font-family:'Fira Code',monospace;font-size:.78rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:.2rem .65rem;}
     .file-tab.active{color:var(--text);border-color:var(--blue);}
-    .copy-btn{margin-left:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:.78rem;font-family:'IBM Plex Sans',sans-serif;padding:.3rem .7rem;cursor:pointer;transition:all .15s;}
+    .copy-btn{margin-left:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:.78rem;font-family:'Inter',sans-serif;padding:.3rem .7rem;cursor:pointer;transition:all .15s;}
     .copy-btn:hover{color:var(--text);border-color:var(--muted);}
     .copy-btn.copied{color:var(--green);border-color:var(--green);}
     .desc-bar{padding:.75rem 1rem;background:var(--bg);border-bottom:1px solid var(--border);font-size:.82rem;color:var(--muted);line-height:1.6;flex-shrink:0;}
     .code-scroll{flex:1;overflow:auto;}
     pre{margin:0;padding:1rem;}
-    code{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.7;color:var(--text);}
-    .placeholder{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.85rem;}
+    code{font-family:'Fira Code',monospace;font-size:.82rem;line-height:1.7;color:var(--text);}
+    .placeholder{color:var(--muted);font-family:'Fira Code',monospace;font-size:.85rem;}
 
     /* Syntax highlighting */
     .kw{color:#ff7b72;}
@@ -74,7 +74,7 @@
     footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:1.5rem;color:var(--muted);font-size:.8rem;}
     footer a{color:var(--blue);text-decoration:none;}
     footer a:hover{text-decoration:underline;}
-    footer .brand{font-family:'JetBrains Mono',monospace;color:var(--green);font-size:.85rem;font-weight:700;margin-bottom:.4rem;}
+    footer .brand{font-family:'Fira Code',monospace;color:var(--green);font-size:.85rem;font-weight:700;margin-bottom:.4rem;}
     @media(max-width:768px){.ide-layout{grid-template-columns:1fr;height:auto;}.sidebar{height:180px;}.code-scroll{height:400px;}nav ul{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;}}
   </style>
 </head>

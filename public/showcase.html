@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Showcase – Computer Science</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;
@@ -13,7 +13,7 @@
       --red:#f85149;--yellow:#e3b341;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
     .banner{background:var(--surface);border-bottom:1px solid var(--border);}
     .banner a{display:block;}
     .banner img{width:100%;max-height:160px;object-fit:cover;display:block;}
@@ -23,11 +23,11 @@
     nav a{display:block;color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;padding:.85rem .9rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
     nav a:hover{color:var(--text);}
     nav a.active{color:var(--text);border-bottom-color:var(--green);}
-    nav a.ide-link{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.8rem;background:rgba(63,185,80,.1);border-radius:6px;margin:.5rem .4rem;padding:.35rem .8rem;border-bottom:none;}
+    nav a.ide-link{color:var(--green);font-family:'Fira Code',monospace;font-weight:700;font-size:.8rem;background:rgba(63,185,80,.1);border-radius:6px;margin:.5rem .4rem;padding:.35rem .8rem;border-bottom:none;}
     nav a.ide-link:hover{background:rgba(63,185,80,.2);}
     main{flex:1;max-width:1200px;width:100%;margin:0 auto;padding:2rem 1.5rem;}
     .page-header{margin-bottom:1.5rem;}
-    .page-header h1{font-family:'JetBrains Mono',monospace;font-size:1.4rem;color:var(--text);margin-bottom:.25rem;}
+    .page-header h1{font-family:'Fira Code',monospace;font-size:1.4rem;color:var(--text);margin-bottom:.25rem;}
     .page-header p{color:var(--muted);font-size:.875rem;}
 
     /* Controls */
@@ -36,7 +36,7 @@
     .filter-btn:hover{color:var(--text);border-color:var(--muted);}
     .filter-btn.active{background:rgba(88,166,255,.1);border-color:var(--blue);color:var(--blue);}
     .search-row{display:flex;gap:.5rem;margin-bottom:1.5rem;}
-    .search-row input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.55rem .9rem;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:.875rem;outline:none;}
+    .search-row input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.55rem .9rem;color:var(--text);font-family:'Inter',sans-serif;font-size:.875rem;outline:none;}
     .search-row input:focus{border-color:var(--blue);}
     .search-row input::placeholder{color:var(--muted);}
     .search-row button{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.55rem 1rem;font-size:.875rem;cursor:pointer;transition:background .15s;}
@@ -49,7 +49,7 @@
     .project-img{height:160px;background:var(--surface2);position:relative;display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
     .project-cat{position:absolute;top:8px;right:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;font-size:.72rem;font-weight:600;padding:.2rem .5rem;color:var(--muted);}
     .project-body{padding:1rem;flex:1;display:flex;flex-direction:column;}
-    .project-title{font-family:'JetBrains Mono',monospace;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.2rem;}
+    .project-title{font-family:'Fira Code',monospace;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.2rem;}
     .project-student{font-size:.8rem;color:var(--muted);margin-bottom:.6rem;}
     .project-desc{font-size:.82rem;color:var(--muted);line-height:1.6;flex:1;margin-bottom:.75rem;}
     .project-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.75rem;}
@@ -60,12 +60,12 @@
     .like-btn{background:none;border:none;color:var(--muted);font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;transition:color .15s;}
     .like-btn:hover,.like-btn.liked{color:var(--red);}
     .empty{text-align:center;padding:3rem;color:var(--muted);display:none;}
-    .empty h3{font-family:'JetBrains Mono',monospace;font-size:1rem;margin-bottom:.5rem;color:var(--text);}
+    .empty h3{font-family:'Fira Code',monospace;font-size:1rem;margin-bottom:.5rem;color:var(--text);}
 
     footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:1.5rem;color:var(--muted);font-size:.8rem;}
     footer a{color:var(--blue);text-decoration:none;}
     footer a:hover{text-decoration:underline;}
-    footer .brand{font-family:'JetBrains Mono',monospace;color:var(--green);font-size:.85rem;font-weight:700;margin-bottom:.4rem;}
+    footer .brand{font-family:'Fira Code',monospace;color:var(--green);font-size:.85rem;font-weight:700;margin-bottom:.4rem;}
     @media(max-width:640px){nav ul{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;}.projects-grid{grid-template-columns:1fr;}}
   </style>
 </head>
