@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Classroom IDE – Login</title>
+
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg:      #0d1117;
+      --bg: #0d1117;
       --surface: #161b22;
-      --border:  #30363d;
-      --text:    #e6edf3;
-      --muted:   #8b949e;
-      --green:   #3fb950;
-      --blue:    #58a6ff;
-      --red:     #f85149;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --green: #3fb950;
+      --blue: #58a6ff;
+      --red: #f85149;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       background: var(--bg);
       color: var(--text);
@@ -26,6 +30,7 @@
       align-items: center;
       justify-content: center;
     }
+
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -35,6 +40,7 @@
       max-width: 400px;
       box-shadow: 0 24px 64px rgba(0,0,0,0.4);
     }
+
     .brand {
       font-family: 'JetBrains Mono', monospace;
       font-size: 1.1rem;
@@ -42,38 +48,39 @@
       color: var(--green);
       margin-bottom: 6px;
     }
+
     .subtitle {
       font-size: 0.85rem;
       color: var(--muted);
       margin-bottom: 32px;
     }
+
     .tabs {
       display: flex;
-      gap: 0;
       background: var(--bg);
       border-radius: 8px;
       padding: 4px;
       margin-bottom: 24px;
       border: 1px solid var(--border);
     }
+
     .tab {
       flex: 1;
       padding: 8px;
       background: none;
       border: none;
       color: var(--muted);
-      font-family: 'IBM Plex Sans', sans-serif;
       font-size: 0.85rem;
-      font-weight: 500;
       cursor: pointer;
       border-radius: 6px;
-      transition: all 0.15s;
     }
+
     .tab.active {
       background: var(--surface);
       color: var(--text);
       border: 1px solid var(--border);
     }
+
     label {
       display: block;
       font-size: 0.75rem;
@@ -83,6 +90,7 @@
       letter-spacing: 0.08em;
       margin-bottom: 6px;
     }
+
     input {
       width: 100%;
       background: var(--bg);
@@ -90,13 +98,12 @@
       border-radius: 6px;
       padding: 10px 14px;
       color: var(--text);
-      font-family: 'IBM Plex Sans', sans-serif;
       font-size: 0.9rem;
-      outline: none;
       margin-bottom: 16px;
-      transition: border-color 0.15s;
     }
-    input:focus { border-color: var(--blue); }
+
+    input:focus { border-color: var(--blue); outline: none; }
+
     .btn {
       width: 100%;
       background: var(--green);
@@ -104,15 +111,13 @@
       border: none;
       border-radius: 8px;
       padding: 12px;
-      font-family: 'IBM Plex Sans', sans-serif;
       font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.15s;
-      margin-top: 4px;
     }
-    .btn:hover { opacity: 0.85; }
+
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
     .error {
       background: rgba(248,81,73,0.1);
       border: 1px solid rgba(248,81,73,0.3);
@@ -123,203 +128,136 @@
       margin-bottom: 16px;
       display: none;
     }
+
     .error.show { display: block; }
+
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+
     .color-picker {
       display: flex;
       gap: 8px;
       margin-bottom: 16px;
-      flex-wrap: wrap;
     }
+
     .color-btn {
       width: 32px;
       height: 32px;
       border-radius: 50%;
       border: 3px solid transparent;
       cursor: pointer;
-      transition: transform 0.15s, border-color 0.15s;
-      outline: none;
     }
-    .color-btn:hover { transform: scale(1.15); }
-    .color-btn.active {
-      border-color: var(--text);
-      transform: scale(1.15);
-    }
-    .form-panel { display: none; }
-    .form-panel.active { display: block; }
+
+    .color-btn.active { border-color: var(--text); }
   </style>
 </head>
+
 <body>
-<div class="card">
-  <div class="brand">💻 Classroom IDE</div>
-  <div class="subtitle">Sign in to access your workspace</div>
+  <div class="card">
+    <div class="brand">💻 Classroom IDE</div>
+    <div class="subtitle">Sign in to access your workspace</div>
 
-  <div class="tabs">
-    <button class="tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
-    <button class="tab" id="tab-register" onclick="switchTab('register')">Register</button>
-  </div>
-
-  <div id="error-box" class="error"></div>
-
-  <!-- Login Form -->
-  <div class="form-panel active" id="panel-login">
-    <label for="login-user">Username / Email</label>
-    <input type="text" id="login-user" placeholder="your@email.com" autocomplete="username">
-    <label for="login-pass">Password</label>
-    <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
-    <button class="btn" id="login-btn" onclick="doLogin()">Sign In</button>
-  </div>
-
-  <!-- Register Form -->
-  <div class="form-panel" id="panel-register">
-    <div style="display:flex;gap:12px;">
-      <div style="flex:1">
-        <label for="reg-first">First Name</label>
-        <input type="text" id="reg-first" placeholder="Jane">
-      </div>
-      <div style="flex:1">
-        <label for="reg-last">Last Name</label>
-        <input type="text" id="reg-last" placeholder="Smith">
-      </div>
+    <div class="tabs">
+      <button class="tab active" id="tab-login">Sign In</button>
+      <button class="tab" id="tab-register">Register</button>
     </div>
-    <label for="reg-user">Email Address</label>
-    <input type="text" id="reg-user" placeholder="your@email.com" autocomplete="username">
-    <label for="reg-pass">Password</label>
-    <input type="password" id="reg-pass" placeholder="At least 8 characters" autocomplete="new-password">
-    <label>Class Color</label>
-    <div class="color-picker" id="color-picker">
-      <button type="button" class="color-btn active" data-color="red"    style="background:#f85149" title="Red"></button>
-      <button type="button" class="color-btn"        data-color="green"  style="background:#3fb950" title="Green"></button>
-      <button type="button" class="color-btn"        data-color="blue"   style="background:#58a6ff" title="Blue"></button>
-      <button type="button" class="color-btn"        data-color="yellow" style="background:#e3b341" title="Yellow"></button>
-      <button type="button" class="color-btn"        data-color="purple" style="background:#bc8cff" title="Purple"></button>
+
+    <div id="error-box" class="error"></div>
+
+    <!-- Login -->
+    <div class="form-panel active" id="panel-login">
+      <label>Email</label>
+      <input id="login-user" type="text" />
+      <label>Password</label>
+      <input id="login-pass" type="password" />
+      <button class="btn" id="login-btn">Sign In</button>
     </div>
-    <input type="hidden" id="reg-color" value="red">
-    <button class="btn" id="register-btn" onclick="doRegister()">Create Account</button>
+
+    <!-- Register -->
+    <div class="form-panel" id="panel-register">
+      <label>First Name</label>
+      <input id="reg-first" type="text" />
+      <label>Last Name</label>
+      <input id="reg-last" type="text" />
+      <label>Email</label>
+      <input id="reg-user" type="text" />
+      <label>Password</label>
+      <input id="reg-pass" type="password" />
+
+      <label>Class Color</label>
+      <div class="color-picker">
+        <button class="color-btn active" data-color="red" style="background:#f85149"></button>
+        <button class="color-btn" data-color="green" style="background:#3fb950"></button>
+        <button class="color-btn" data-color="blue" style="background:#58a6ff"></button>
+      </div>
+
+      <input type="hidden" id="reg-color" value="red">
+      <button class="btn" id="register-btn">Create Account</button>
+    </div>
   </div>
-</div>
 
-<script>
-  // ── Redirect if already logged in ──────────────────────────────────────────
-  (async () => {
-    try {
-      const res  = await fetch('/auth/me');
-      const data = await res.json();
-      if (data.loggedIn) {
-        window.location.href = data.role === 'teacher' ? '/teacher.html' : '/Ide.html';
-      }
-    } catch (e) {
-      // Server unreachable — stay on login page
-    }
-  })();
+  <script>
+    const errorBox = document.getElementById('error-box');
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function showError(msg) {
-    const el = document.getElementById('error-box');
-    el.textContent = msg;
-    el.classList.toggle('show', !!msg);
-  }
-
-  function setLoading(btnId, loading) {
-    const btn = document.getElementById(btnId);
-    btn.disabled    = loading;
-    btn.textContent = loading ? 'Please wait…' : (btnId === 'login-btn' ? 'Sign In' : 'Create Account');
-  }
-
-  function switchTab(tab) {
-    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
-    document.getElementById('panel-login').classList.toggle('active', tab === 'login');
-    document.getElementById('panel-register').classList.toggle('active', tab === 'register');
-    showError('');
-  }
-
-  // ── Login ──────────────────────────────────────────────────────────────────
-  async function doLogin() {
-    const username = document.getElementById('login-user').value.trim();
-    const password = document.getElementById('login-pass').value;
-
-    if (!username || !password) {
-      return showError('Please enter your username and password.');
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.classList.toggle('show', !!msg);
     }
 
-    setLoading('login-btn', true);
-    showError('');
+    function switchTab(tab) {
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+      document.getElementById('panel-register').classList.toggle('active', tab === 'register');
+      showError('');
+    }
 
-    try {
-      const res  = await fetch('/auth/login', {
-        method:  'POST',
+    document.getElementById('tab-login').addEventListener('click', () => switchTab('login'));
+    document.getElementById('tab-register').addEventListener('click', () => switchTab('register'));
+
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const username = loginUser.value.trim();
+      const password = loginPass.value;
+      if (!username || !password) return showError('Missing fields');
+
+      const res = await fetch('/auth/login', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password })
       });
+
       const data = await res.json();
-
-      if (!res.ok) {
-        showError(data.error || 'Login failed. Please try again.');
-        return;
-      }
-
-      window.location.href = data.role === 'teacher' ? '/teacher.html' : '/Ide.html';
-
-    } catch (err) {
-      showError('Could not reach the server. Make sure you are connected to the school network.');
-    } finally {
-      setLoading('login-btn', false);
-    }
-  }
-
-  // ── Register ───────────────────────────────────────────────────────────────
-  async function doRegister() {
-    const first_name  = document.getElementById('reg-first').value.trim();
-    const last_name   = document.getElementById('reg-last').value.trim();
-    const username    = document.getElementById('reg-user').value.trim();
-    const password    = document.getElementById('reg-pass').value;
-    const class_color = document.getElementById('reg-color').value;
-
-    if (!first_name || !last_name) return showError('Please enter your first and last name.');
-    if (!username)                  return showError('Please enter your email address.');
-    if (!password)                  return showError('Please enter a password.');
-    if (password.length < 8)        return showError('Password must be at least 8 characters.');
-
-    setLoading('register-btn', true);
-    showError('');
-
-    try {
-      const res  = await fetch('/auth/register', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ username, password, first_name, last_name, class_color }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        showError(data.error || 'Registration failed. Please try again.');
-        return;
-      }
-
-      window.location.href = '/Ide.html';
-
-    } catch (err) {
-      showError('Could not reach the server. Make sure you are connected to the school network.');
-    } finally {
-      setLoading('register-btn', false);
-    }
-  }
-
-  // ── Color picker ───────────────────────────────────────────────────────────
-  document.querySelectorAll('.color-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('reg-color').value = btn.dataset.color;
+      if (!res.ok) return showError(data.error || 'Login failed');
+      location.href = data.role === 'teacher' ? '/teacher.html' : '/Ide.html';
     });
-  });
 
-  // ── Enter key support ──────────────────────────────────────────────────────
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'Enter') return;
-    const loginActive = document.getElementById('panel-login').classList.contains('active');
-    loginActive ? doLogin() : doRegister();
-  });
-</script>
+    document.getElementById('register-btn').addEventListener('click', async () => {
+      const body = {
+        first_name: regFirst.value.trim(),
+        last_name: regLast.value.trim(),
+        username: regUser.value.trim(),
+        password: regPass.value,
+        class_color: regColor.value
+      };
+
+      const res = await fetch('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+      if (!res.ok) return showError(data.error || 'Registration failed');
+      location.href = '/Ide.html';
+    });
+
+    document.querySelectorAll('.color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        regColor.value = btn.dataset.color;
+      });
+    });
+  </script>
 </body>
 </html>
