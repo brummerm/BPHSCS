@@ -61,7 +61,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── Session ───────────────────────────────────────────────────────────────────
 app.use(session({
   name:  'cls.sid',   // Non-default name prevents server fingerprinting
-  store: new SQLiteStore({ db: 'sessions.db', dir: '.' }),
+  store: new SQLiteStore({ db: 'sessions.db', dir: process.env.DB_DIR || '.' }),
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
