@@ -793,8 +793,8 @@
   <span class="topbar-brand">💻 IDE</span>
 
   <div class="lang-tabs">
-    <button class="lang-tab active" onclick="switchLang('python')">🐍 Python</button>
-    <button class="lang-tab" onclick="switchLang('html')">🌐 HTML/CSS</button>
+    <button class="lang-tab active" id="lang-python">🐍 Python</button>
+    <button class="lang-tab" id="lang-html">🌐 HTML/CSS</button>
   </div>
 
   <div class="spacer"></div>
@@ -803,9 +803,9 @@
 
   <div class="topbar-user" id="user-display"></div>
 
-  <button class="btn-sm" onclick="openPasswordModal()">Password</button>
-  <button id="teacher-dashboard-btn" class="btn-sm hidden" onclick="window.location.href='/teacher.html'">⚙ Dashboard</button>
-  <button class="btn-sm danger" onclick="doLogout()">Sign Out</button>
+  <button class="btn-sm" id="password-btn">Password</button>
+  <button id="teacher-dashboard-btn" class="btn-sm hidden">⚙ Dashboard</button>
+  <button class="btn-sm danger" id="logout-btn">Sign Out</button>
 </div>
 
 <!-- ── Main ────────────────────────────────────────────────────── -->
@@ -814,8 +814,8 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-tabs">
-      <button class="sidebar-tab active" onclick="switchSideTab('assignments')">Assignments</button>
-      <button class="sidebar-tab hidden" id="teacher-tab" onclick="switchSideTab('teacher')">⚙ Teacher</button>
+      <button class="sidebar-tab active" id="tab-assignments">Assignments</button>
+      <button class="sidebar-tab hidden" id="tab-teacher">⚙ Teacher</button>
     </div>
 
     <!-- Assignments Panel -->
@@ -832,10 +832,10 @@
     <div class="sidebar-panel" id="panel-teacher">
       <div class="sidebar-header">
         <span class="sidebar-title">Manage Assignments</span>
-        <button class="btn-sm" onclick="openAssignmentModal()">+ New</button>
+        <button class="btn-sm" id="new-assignment-btn">+ New</button>
       </div>
       <div style="padding: 8px;">
-        <button class="btn-sm" style="width:100%;text-align:center;padding:8px;" onclick="openSubmissionsModal()">📋 View Student Submissions</button>
+        <button class="btn-sm" style="width:100%;text-align:center;padding:8px;" id="view-submissions-btn">📋 View Student Submissions</button>
       </div>
       <div class="sidebar-list" id="teacher-assign-list">
         <div class="empty-state">No assignments yet.</div>
@@ -847,11 +847,11 @@
   <div class="editor-area">
     <div id="editor-container"></div>
     <div class="run-bar">
-      <button class="btn-run" id="run-btn" onclick="runPython()">▶ Run</button>
-      <button class="btn-preview hidden" id="preview-btn" onclick="previewHTML()">👁 Preview</button>
-      <button class="btn-save" onclick="saveCurrentFile()">💾 Save</button>
+      <button class="btn-run" id="run-btn">▶ Run</button>
+      <button class="btn-preview hidden" id="preview-btn">👁 Preview</button>
+      <button class="btn-save" id="save-btn">💾 Save</button>
       <span class="save-status" id="save-status"></span>
-      <button class="btn-submit hidden" id="submit-btn" onclick="openSubmitModal()">📤 Submit Assignment</button>
+      <button class="btn-submit hidden" id="submit-btn">📤 Submit Assignment</button>
       <span class="run-hint">Ctrl + Enter</span>
     </div>
   </div>
@@ -863,7 +863,7 @@
         <span class="terminal-status" id="terminal-status"></span>
         Terminal
       </span>
-      <button class="btn-clear-out" onclick="clearTerminal()">✕ clear</button>
+      <button class="btn-clear-out" id="clear-terminal-btn">✕ clear</button>
     </div>
 
     <!-- Terminal -->
@@ -911,8 +911,8 @@
     </div>
 
     <div class="modal-row">
-      <button class="btn-modal-cancel" onclick="closeAssignmentModal()">Cancel</button>
-      <button class="btn-modal-save" onclick="saveAssignment()">Save Assignment</button>
+      <button class="btn-modal-cancel" id="cancel-assign-btn">Cancel</button>
+      <button class="btn-modal-save" id="save-assign-btn">Save Assignment</button>
     </div>
   </div>
 </div>
@@ -927,8 +927,8 @@
     <label>Note to teacher (optional)</label>
     <textarea id="submit-note" rows="3" placeholder="e.g. I had trouble with the loop on line 5..."></textarea>
     <div class="modal-row">
-      <button class="btn-modal-cancel" onclick="closeSubmitModal()">Cancel</button>
-      <button class="btn-modal-save" style="background:var(--purple);" onclick="submitAssignment()">Submit</button>
+      <button class="btn-modal-cancel" id="cancel-submit-btn">Cancel</button>
+      <button class="btn-modal-save" style="background:var(--purple);" id="confirm-submit-btn">Submit</button>
     </div>
   </div>
 </div>
@@ -945,7 +945,7 @@
         <select id="submissions-assign-select">
           <option value="">-- Choose assignment --</option>
         </select>
-        <button class="btn-sm" onclick="loadSubmissionsForAssignment()">Load</button>
+        <button class="btn-sm" id="load-submissions-btn">Load</button>
       </div>
       <div class="submission-list" id="submission-list">
         <div style="color:var(--muted);font-size:0.82rem;">Choose an assignment above to see submissions.</div>
@@ -954,13 +954,13 @@
 
     <!-- Single submission code view -->
     <div id="submissions-code-view" style="display:none;">
-      <button class="back-btn" onclick="backToSubmissionList()">← Back to list</button>
+      <button class="back-btn" id="back-to-list-btn">← Back to list</button>
       <div id="sub-detail-header" style="margin-bottom:8px;"></div>
       <pre class="sub-code-block" id="sub-detail-code"></pre>
     </div>
 
     <div class="modal-row" style="margin-top:16px;">
-      <button class="btn-modal-cancel" onclick="closeSubmissionsModal()">Close</button>
+      <button class="btn-modal-cancel" id="close-submissions-btn">Close</button>
     </div>
   </div>
 </div>
@@ -977,8 +977,8 @@
     <input type="password" id="pw-confirm" placeholder="••••••••">
     <div id="pw-error" style="color:var(--red);font-size:0.8rem;margin-bottom:10px;"></div>
     <div class="modal-row">
-      <button class="btn-modal-cancel" onclick="closePasswordModal()">Cancel</button>
-      <button class="btn-modal-save" onclick="changePassword()">Update Password</button>
+      <button class="btn-modal-cancel" id="cancel-pw-btn">Cancel</button>
+      <button class="btn-modal-save" id="update-pw-btn">Update Password</button>
     </div>
   </div>
 </div>
@@ -1009,63 +1009,126 @@ const DEFAULT_HTML   = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <style>\n  
 //  BOOT
 // ═══════════════════════════════════════════════════════════════
 (async () => {
-  const me = await fetch('/auth/me').then(r => r.json());
-  if (!me.loggedIn) { window.location.href = '/Login.html'; return; }
+  try {
+    const me = await fetch('/auth/me').then(r => r.json());
+    if (!me.loggedIn) { window.location.href = '/Login.html'; return; }
 
-  userRole = me.role;
-  username = me.username;
+    userRole = me.role;
+    username = me.username;
 
-  // Show user info
-  const badge = me.role === 'teacher' ? '<span class="teacher-badge">teacher</span>' : '';
-  document.getElementById('user-display').innerHTML = `Signed in as <span>${me.username}</span>${badge}`;
+    // Show user info
+    const badge = me.role === 'teacher' ? '<span class="teacher-badge">teacher</span>' : '';
+    document.getElementById('user-display').innerHTML = `Signed in as <span>${me.username}</span>${badge}`;
 
-  // Reveal teacher tab
-  if (me.role === 'teacher') {
-    document.getElementById('teacher-tab').classList.remove('hidden');
-    document.getElementById('teacher-dashboard-btn').classList.remove('hidden');
-    // Start teacher on teacher tab
-    document.querySelectorAll('.sidebar-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
-    document.querySelector('[onclick*="teacher"]').classList.add('active');
-    document.getElementById('panel-teacher').classList.add('active');
+    // Reveal teacher tab
+    if (me.role === 'teacher') {
+      document.getElementById('tab-teacher').classList.remove('hidden');
+      document.getElementById('teacher-dashboard-btn').classList.remove('hidden');
+      // Start teacher on teacher tab
+      document.querySelectorAll('.sidebar-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-teacher').classList.add('active');
+      document.getElementById('panel-teacher').classList.add('active');
+    }
+
+    // Init Monaco
+    require.config({ paths: { vs: '/vs' } });
+    require(['vs/editor/editor.main'], () => {
+      editor = monaco.editor.create(document.getElementById('editor-container'), {
+        value: DEFAULT_PYTHON,
+        language: 'python',
+        theme: 'vs-dark',
+        fontSize: 14,
+        fontFamily: "'JetBrains Mono', monospace",
+        minimap: { enabled: false },
+        automaticLayout: true,
+        wordWrap: 'on',
+        scrollBeyondLastLine: false,
+        lineNumbersMinChars: 3,
+      });
+
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+        currentLang === 'python' ? runPython() : previewHTML();
+      });
+
+      // Auto-save on edit
+      editor.onDidChangeModelContent(() => {
+        setSaveStatus('');
+        clearTimeout(autoSaveTimer);
+        if (currentFileId) {
+          // Saving a regular file
+          autoSaveTimer = setTimeout(() => saveCurrentFile(true), 2000);
+        } else if (currentAssignmentId && userRole === 'student') {
+          // Auto-save assignment progress
+          autoSaveTimer = setTimeout(() => saveAssignmentProgress(true), 2000);
+        }
+      });
+    });
+
+    await loadAssignments();
+    setupEventListeners();
+  } catch (err) {
+    console.error('Boot error:', err);
   }
+})();
 
-  // Init Monaco
-  require.config({ paths: { vs: '/vs' } });
-  require(['vs/editor/editor.main'], () => {
-    editor = monaco.editor.create(document.getElementById('editor-container'), {
-      value: DEFAULT_PYTHON,
-      language: 'python',
-      theme: 'vs-dark',
-      fontSize: 14,
-      fontFamily: "'JetBrains Mono', monospace",
-      minimap: { enabled: false },
-      automaticLayout: true,
-      wordWrap: 'on',
-      scrollBeyondLastLine: false,
-      lineNumbersMinChars: 3,
-    });
+function setupEventListeners() {
+  // Language tabs
+  document.getElementById('lang-python').addEventListener('click', () => switchLang('python'));
+  document.getElementById('lang-html').addEventListener('click', () => switchLang('html'));
 
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      currentLang === 'python' ? runPython() : previewHTML();
-    });
+  // Sidebar tabs
+  document.getElementById('tab-assignments').addEventListener('click', () => switchSideTab('assignments'));
+  document.getElementById('tab-teacher').addEventListener('click', () => switchSideTab('teacher'));
 
-    // Auto-save on edit
-    editor.onDidChangeModelContent(() => {
-      setSaveStatus('');
-      clearTimeout(autoSaveTimer);
-      if (currentFileId) {
-        // Saving a regular file
-        autoSaveTimer = setTimeout(() => saveCurrentFile(true), 2000);
-      } else if (currentAssignmentId && userRole === 'student') {
-        // Auto-save assignment progress
-        autoSaveTimer = setTimeout(() => saveAssignmentProgress(true), 2000);
-      }
+  // Buttons
+  document.getElementById('password-btn').addEventListener('click', openPasswordModal);
+  document.getElementById('teacher-dashboard-btn').addEventListener('click', () => window.location.href = '/teacher.html');
+  document.getElementById('logout-btn').addEventListener('click', doLogout);
+  
+  document.getElementById('run-btn').addEventListener('click', runPython);
+  document.getElementById('preview-btn').addEventListener('click', previewHTML);
+  document.getElementById('save-btn').addEventListener('click', () => saveCurrentFile());
+  document.getElementById('submit-btn').addEventListener('click', openSubmitModal);
+  document.getElementById('clear-terminal-btn').addEventListener('click', clearTerminal);
+
+  // Teacher panel buttons
+  document.getElementById('new-assignment-btn').addEventListener('click', () => openAssignmentModal());
+  document.getElementById('view-submissions-btn').addEventListener('click', openSubmissionsModal);
+
+  // Modal buttons
+  document.getElementById('cancel-assign-btn').addEventListener('click', closeAssignmentModal);
+  document.getElementById('save-assign-btn').addEventListener('click', saveAssignment);
+  
+  document.getElementById('cancel-submit-btn').addEventListener('click', closeSubmitModal);
+  document.getElementById('confirm-submit-btn').addEventListener('click', submitAssignment);
+  
+  document.getElementById('load-submissions-btn').addEventListener('click', loadSubmissionsForAssignment);
+  document.getElementById('back-to-list-btn').addEventListener('click', backToSubmissionList);
+  document.getElementById('close-submissions-btn').addEventListener('click', closeSubmissionsModal);
+  
+  document.getElementById('cancel-pw-btn').addEventListener('click', closePasswordModal);
+  document.getElementById('update-pw-btn').addEventListener('click', changePassword);
+
+  // Terminal input
+  document.getElementById('terminal-input').addEventListener('keydown', handleTerminalInput);
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('show');
     });
   });
 
-  await loadAssignments();
-})();
+  // Color picker buttons
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('reg-color').value = btn.dataset.color;
+    });
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════
 //  LANGUAGE SWITCHING
@@ -1232,12 +1295,6 @@ function setSaveStatus(status) {
   el.className = 'save-status' + (status === 'saved' ? ' saved' : '');
   el.textContent = status === 'saved' ? '✓ Saved' : status === 'error' ? '✗ Save error' : '';
 }
-
-// Enter key in filename input
-document.addEventListener('DOMContentLoaded', () => {
-  const inp = document.getElementById('new-filename-input');
-  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') createFile(); });
-});
 
 // ═══════════════════════════════════════════════════════════════
 //  ASSIGNMENTS
@@ -1505,22 +1562,18 @@ function previewHTML() {
 }
 
 // Send a line of input to the running process
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('terminal-input');
-  if (!input) return;
-  input.addEventListener('keydown', async (e) => {
-    if (e.key === 'Enter' && isRunning && currentPid) {
-      const line = input.value;
-      input.value = '';
-      appendTerminal(line + '\n', 't-echo');
-      await fetch(`/run/stdin/${currentPid}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ line })
-      });
-    }
-  });
-});
+function handleTerminalInput(e) {
+  if (e.key === 'Enter' && isRunning && currentPid) {
+    const line = e.target.value;
+    e.target.value = '';
+    appendTerminal(line + '\n', 't-echo');
+    fetch(`/run/stdin/${currentPid}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ line })
+    });
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════
 //  AUTH
@@ -1682,7 +1735,7 @@ function backToSubmissionList() {
 // ═══════════════════════════════════════════════════════════════
 function switchSideTab(tab) {
   document.querySelectorAll('.sidebar-tab').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  document.querySelector(`[onclick*="${tab}"]`).classList.add('active');
   document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`panel-${tab}`).classList.add('active');
 }
@@ -1700,12 +1753,34 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Close modals on overlay click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove('show');
-  });
-});
+// Make functions available globally for onclick handlers
+window.switchLang = switchLang;
+window.switchSideTab = switchSideTab;
+window.openPasswordModal = openPasswordModal;
+window.doLogout = doLogout;
+window.runPython = runPython;
+window.previewHTML = previewHTML;
+window.saveCurrentFile = saveCurrentFile;
+window.openSubmitModal = openSubmitModal;
+window.clearTerminal = clearTerminal;
+window.openAssignmentModal = openAssignmentModal;
+window.closeAssignmentModal = closeAssignmentModal;
+window.saveAssignment = saveAssignment;
+window.closeSubmitModal = closeSubmitModal;
+window.submitAssignment = submitAssignment;
+window.openSubmissionsModal = openSubmissionsModal;
+window.closeSubmissionsModal = closeSubmissionsModal;
+window.loadSubmissionsForAssignment = loadSubmissionsForAssignment;
+window.backToSubmissionList = backToSubmissionList;
+window.closePasswordModal = closePasswordModal;
+window.changePassword = changePassword;
+window.loadAssignment = loadAssignment;
+window.editAssignment = editAssignment;
+window.toggleAssignVisibility = toggleAssignVisibility;
+window.deleteAssignment = deleteAssignment;
+window.viewSubmission = viewSubmission;
+window.openFile = openFile;
+window.deleteFile = deleteFile;
 </script>
 </body>
 </html>
