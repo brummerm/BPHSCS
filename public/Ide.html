@@ -845,8 +845,8 @@
   <span class="topbar-brand">💻 IDE</span>
 
   <div class="lang-tabs">
-    <button class="lang-tab active" id="lang-python">Python</button>
-    <button class="lang-tab" id="lang-html">HTML/CSS</button>
+    <button class="lang-tab active" id="lang-python">🐍 Python</button>
+    <button class="lang-tab" id="lang-html">🌐 HTML/CSS</button>
   </div>
 
   <div class="spacer"></div>
@@ -900,10 +900,10 @@
     <div id="editor-container"></div>
     <div class="run-bar">
       <button class="btn-run" id="run-btn">▶ Run</button>
-      <button class="btn-preview hidden" id="preview-btn">Preview</button>
+      <button class="btn-preview hidden" id="preview-btn">👁 Preview</button>
       <button class="btn-save" id="save-btn">💾 Save</button>
       <span class="save-status" id="save-status"></span>
-      <button class="btn-submit hidden" id="submit-btn">Submit Assignment</button>
+      <button class="btn-submit hidden" id="submit-btn">📤 Submit Assignment</button>
       <span class="run-hint">Ctrl + Enter</span>
     </div>
   </div>
@@ -950,8 +950,8 @@
 
     <label>Language</label>
     <select id="assign-language">
-      <option value="python">Python</option>
-      <option value="html">HTML / CSS</option>
+      <option value="python">🐍 Python</option>
+      <option value="html">🌐 HTML / CSS</option>
     </select>
 
     <div class="modal-code-area">Starter Code (optional — loaded into editor when student opens this assignment)</div>
@@ -972,7 +972,7 @@
 <!-- Submit Assignment Modal -->
 <div class="modal-overlay" id="submit-modal">
   <div class="modal">
-    <h2>Submit Assignment</h2>
+    <h2>📤 Submit Assignment</h2>
     <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;">Your current code will be submitted to your teacher for review.</p>
     <label>Assignment</label>
     <input type="text" id="submit-assign-name" disabled style="opacity:0.6;">
@@ -1049,6 +1049,7 @@ let currentFileId     = null;
 let currentFile       = null;
 let currentAssignmentId = null;
 let currentAssignmentTitle = '';
+let currentAssignmentAllowResubmit = false;
 let userRole          = 'student';
 let username          = '';
 let autoSaveTimer     = null;
@@ -1057,7 +1058,7 @@ let assignments       = [];
 let hasSubmitted      = false;
 let lastSubmission    = null;
 
-const DEFAULT_PYTHON = `# Welcome to the Classroom IDE!\n# Write your code below and press Run (or Ctrl+Enter).`;
+const DEFAULT_PYTHON = `# Welcome to the Classroom IDE!\n# Write your code below and press Run (or Ctrl+Enter).\n\nname = input("What is your name? ")\nprint("Hello,", name + "!")\n\nfor i in range(1, 6):\n    print(f"  {i}. Nice to meet you!")\n`;
 const DEFAULT_HTML   = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <style>\n    body { font-family: Arial; padding: 30px; background: #f5f5f5; }\n    h1   { color: #2563eb; }\n  </style>\n</head>\n<body>\n  <h1>Hello, World!</h1>\n  <p>Edit this HTML and press Preview.</p>\n</body>\n</html>`;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1120,9 +1121,8 @@ const DEFAULT_HTML   = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <style>\n  
           }
         }, 3000);
         
-        // If this is an assignment, update the submit button
+        // If this is an assignment, update the submit button in case state changed
         if (currentAssignmentId) {
-          hasSubmitted = false;
           updateSubmitButton();
         }
       });
@@ -1231,12 +1231,19 @@ function setupEventListeners() {
 function updateSubmitButton() {
   const submitBtn = document.getElementById('submit-btn');
   if (!submitBtn) return;
-  
-  if (hasSubmitted) {
+
+  if (hasSubmitted && !currentAssignmentAllowResubmit) {
+    // Locked — no resubmissions allowed
     submitBtn.textContent = '✓ Submitted';
     submitBtn.classList.add('btn-submitted');
     submitBtn.disabled = true;
+  } else if (hasSubmitted && currentAssignmentAllowResubmit) {
+    // Resubmissions allowed — show active resubmit button
+    submitBtn.textContent = '🔄 Resubmit';
+    submitBtn.classList.remove('btn-submitted');
+    submitBtn.disabled = false;
   } else {
+    // Not yet submitted
     submitBtn.textContent = '📤 Submit Assignment';
     submitBtn.classList.remove('btn-submitted');
     submitBtn.disabled = false;
@@ -1535,6 +1542,7 @@ async function loadAssignment(id) {
 
   currentAssignmentId    = a.id;
   currentAssignmentTitle = a.title;
+  currentAssignmentAllowResubmit = !!a.allow_resubmit;
   currentFileId = null; // Clear file context
 
   switchLang(a.language);
@@ -1876,25 +1884,29 @@ async function changePassword() {
 // ═══════════════════════════════════════════════════════════════
 function openSubmitModal() {
   if (!currentAssignmentId) { toast('No assignment loaded.', 'error'); return; }
-  if (hasSubmitted) { toast('You have already submitted this assignment.', 'error'); return; }
-  
+  if (hasSubmitted && !currentAssignmentAllowResubmit) {
+    toast('You have already submitted this assignment.', 'error'); return;
+  }
+
   const assignName = document.getElementById('submit-assign-name');
   const note = document.getElementById('submit-note');
   const lastSubInfo = document.getElementById('last-submission-info');
-  
+
   if (assignName) assignName.value = currentAssignmentTitle;
   if (note) note.value = '';
-  
+
   // Show last submission info if any
   if (lastSubInfo) {
     if (lastSubmission) {
       const date = new Date(lastSubmission.submitted_at).toLocaleString();
-      lastSubInfo.innerHTML = `Last submitted: ${date}`;
+      lastSubInfo.innerHTML = hasSubmitted
+        ? `Last submitted: ${date} — <span style="color:var(--blue);">Resubmitting will replace this.</span>`
+        : `Last submitted: ${date}`;
     } else {
       lastSubInfo.innerHTML = '';
     }
   }
-  
+
   const modal = document.getElementById('submit-modal');
   if (modal) modal.classList.add('show');
 }
