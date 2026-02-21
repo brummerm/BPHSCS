@@ -203,7 +203,7 @@
   <div class="nav-links">
     <span class="nav-user" id="nav-user-label">Loading…</span>
     <a href="/Ide.html" class="nav-link">💻 Go to IDE</a>
-    <button class="nav-link danger" onclick="doLogout()">Sign Out</button>
+    <button class="nav-link danger" id="logout-btn">Sign Out</button>
   </div>
 </nav>
 
@@ -232,9 +232,9 @@
 
   <!-- Section Tabs -->
   <div class="section-tabs">
-    <button class="section-tab active" onclick="switchSection('assignments', this)">📋 Assignments</button>
-    <button class="section-tab" onclick="switchSection('submissions', this)">📤 Submissions</button>
-    <button class="section-tab" onclick="switchSection('students', this)">👥 Students</button>
+    <button class="section-tab active" id="tab-assignments">📋 Assignments</button>
+    <button class="section-tab" id="tab-submissions">📤 Submissions</button>
+    <button class="section-tab" id="tab-students">👥 Students</button>
   </div>
 
   <!-- ── Assignments ── -->
@@ -244,14 +244,14 @@
         <div class="section-title">Manage Assignments</div>
         <div class="section-subtitle">Create, edit, and control visibility of assignments.</div>
       </div>
-      <button class="btn btn-primary" onclick="openAssignModal()">+ New Assignment</button>
+      <button class="btn btn-primary" id="new-assignment-btn">+ New Assignment</button>
     </div>
     <div class="assignments-grid" id="assignment-grid">
       <div class="empty-state">
         <div class="empty-state-icon">📭</div>
         <h3>No assignments yet</h3>
         <p>Create your first assignment to get students coding.</p>
-        <button class="btn btn-primary" onclick="openAssignModal()">+ New Assignment</button>
+        <button class="btn btn-primary" id="empty-new-assignment-btn">+ New Assignment</button>
       </div>
     </div>
   </div>
@@ -263,11 +263,11 @@
         <div class="section-title">Student Submissions</div>
         <div class="section-subtitle">Review code submitted by students for each assignment.</div>
       </div>
-      <button class="btn btn-green" onclick="loadSubmissions()">↻ Refresh</button>
+      <button class="btn btn-green" id="refresh-submissions-btn">↻ Refresh</button>
     </div>
     <div class="submissions-toolbar">
       <label style="font-size:0.8rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Filter by assignment:</label>
-      <select class="filter-select" id="submission-filter" onchange="filterSubmissions()">
+      <select class="filter-select" id="submission-filter">
         <option value="">All Assignments</option>
       </select>
       <span class="sub-count-label" id="sub-count-label"></span>
@@ -305,7 +305,7 @@
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title" id="assign-modal-title">New Assignment</span>
-      <button class="modal-close" onclick="closeAssignModal()">✕</button>
+      <button class="modal-close" id="close-assign-modal">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="assign-edit-id">
@@ -330,12 +330,11 @@
       <div class="form-group">
         <label>Starter Code <span style="text-transform:none;font-weight:400;">(optional)</span></label>
         <div class="starter-toggle">
-          <button class="active" id="toggle-type-btn" onclick="setStarterMode('type')">✏️ Type Code</button>
-          <button id="toggle-upload-btn" onclick="setStarterMode('upload')">📁 Upload File</button>
+          <button class="active" id="toggle-type-btn">✏️ Type Code</button>
+          <button id="toggle-upload-btn">📁 Upload File</button>
         </div>
-        <div class="upload-zone" id="upload-zone" style="display:none;"
-             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-          <input type="file" id="starter-file-input" accept=".py,.html,.htm" onchange="handleFileSelect(event)">
+        <div class="upload-zone" id="upload-zone" style="display:none;">
+          <input type="file" id="starter-file-input" accept=".py,.html,.htm">
           <div class="upload-zone-text">
             <strong>Click to upload</strong> or drag and drop
             <div class="file-types">.py &nbsp;·&nbsp; .html</div>
@@ -344,7 +343,7 @@
         <div class="upload-success" id="upload-success">
           <span>✓</span>
           <span id="upload-filename"></span>
-          <button style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;" onclick="clearUpload()">Clear</button>
+          <button style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;" id="clear-upload-btn">Clear</button>
         </div>
         <textarea class="code-area" id="assign-starter" placeholder="# Starter code students will see&#10;# Leave blank for a clean editor"></textarea>
       </div>
@@ -357,8 +356,8 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeAssignModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveAssignment()">💾 Save Assignment</button>
+      <button class="btn" id="cancel-assign-modal">Cancel</button>
+      <button class="btn btn-primary" id="save-assign-btn">💾 Save Assignment</button>
     </div>
   </div>
 </div>
@@ -368,7 +367,7 @@
   <div class="modal" style="max-width:420px;">
     <div class="modal-header">
       <span class="modal-title">Reset Student Password</span>
-      <button class="modal-close" onclick="closeResetModal()">✕</button>
+      <button class="modal-close" id="close-reset-modal">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="reset-user-id">
@@ -377,22 +376,23 @@
       </p>
       <div class="form-group">
         <label>New Password</label>
-        <input type="text" id="reset-new-pw" placeholder="Min 4 characters">
+        <input type="text" id="reset-new-pw" placeholder="Min 8 characters">
       </div>
       <div class="modal-error" id="reset-error"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeResetModal()">Cancel</button>
-      <button class="btn btn-green" onclick="doResetPassword()">Reset Password</button>
+      <button class="btn" id="cancel-reset-modal">Cancel</button>
+      <button class="btn btn-green" id="reset-pw-btn">Reset Password</button>
     </div>
   </div>
 </div>
 
+<!-- ── Color Modal ── -->
 <div class="modal-overlay" id="color-modal">
   <div class="modal" style="max-width:380px;">
     <div class="modal-header">
       <span class="modal-title">Change Class Color</span>
-      <button class="modal-close" onclick="closeColorModal()">✕</button>
+      <button class="modal-close" id="close-color-modal">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="color-user-id">
@@ -408,8 +408,8 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeColorModal()">Cancel</button>
-      <button class="btn btn-green" onclick="saveStudentColor()">Save Color</button>
+      <button class="btn" id="cancel-color-modal">Cancel</button>
+      <button class="btn btn-green" id="save-color-btn">Save Color</button>
     </div>
   </div>
 </div>
@@ -424,26 +424,102 @@ let assignments  = [];
 let students     = [];
 let allSubs      = [];
 let starterMode  = 'type';
+let studentSortField = 'last_name';
+let studentSortDir   = 1; // 1 = asc, -1 = desc
 
 // ═══════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════
 (async () => {
-  const me = await fetch('/auth/me').then(r => r.json());
-  if (!me.loggedIn)          { window.location.href = '/Login.html'; return; }
-  if (me.role !== 'teacher') { window.location.href = '/Ide.html';   return; }
+  try {
+    const me = await fetch('/auth/me').then(r => r.json());
+    if (!me.loggedIn)          { window.location.href = '/Login.html'; return; }
+    if (me.role !== 'teacher') { window.location.href = '/Ide.html';   return; }
 
-  document.getElementById('nav-user-label').textContent = me.username;
-  await Promise.all([loadAssignments(), loadStudents(), loadSubmissions()]);
+    document.getElementById('nav-user-label').textContent = me.username;
+    await Promise.all([loadAssignments(), loadStudents(), loadSubmissions()]);
+    setupEventListeners();
+  } catch (err) {
+    console.error('Boot error:', err);
+  }
 })();
+
+function setupEventListeners() {
+  // Section tabs
+  document.getElementById('tab-assignments').addEventListener('click', () => switchSection('assignments'));
+  document.getElementById('tab-submissions').addEventListener('click', () => switchSection('submissions'));
+  document.getElementById('tab-students').addEventListener('click', () => switchSection('students'));
+
+  // Logout
+  document.getElementById('logout-btn').addEventListener('click', doLogout);
+
+  // New assignment buttons
+  document.getElementById('new-assignment-btn').addEventListener('click', () => openAssignModal());
+  const emptyBtn = document.getElementById('empty-new-assignment-btn');
+  if (emptyBtn) emptyBtn.addEventListener('click', () => openAssignModal());
+
+  // Submissions
+  document.getElementById('refresh-submissions-btn').addEventListener('click', loadSubmissions);
+  document.getElementById('submission-filter').addEventListener('change', filterSubmissions);
+
+  // Assignment modal
+  document.getElementById('close-assign-modal').addEventListener('click', closeAssignModal);
+  document.getElementById('cancel-assign-modal').addEventListener('click', closeAssignModal);
+  document.getElementById('save-assign-btn').addEventListener('click', saveAssignment);
+
+  // File upload
+  document.getElementById('toggle-type-btn').addEventListener('click', () => setStarterMode('type'));
+  document.getElementById('toggle-upload-btn').addEventListener('click', () => setStarterMode('upload'));
+  document.getElementById('starter-file-input').addEventListener('change', handleFileSelect);
+  document.getElementById('clear-upload-btn').addEventListener('click', clearUpload);
+
+  // Upload zone drag & drop
+  const uploadZone = document.getElementById('upload-zone');
+  uploadZone.addEventListener('dragover', handleDragOver);
+  uploadZone.addEventListener('dragleave', handleDragLeave);
+  uploadZone.addEventListener('drop', handleDrop);
+
+  // Reset password modal
+  document.getElementById('close-reset-modal').addEventListener('click', closeResetModal);
+  document.getElementById('cancel-reset-modal').addEventListener('click', closeResetModal);
+  document.getElementById('reset-pw-btn').addEventListener('click', doResetPassword);
+  document.getElementById('reset-new-pw').addEventListener('keydown', e => { if (e.key === 'Enter') doResetPassword(); });
+
+  // Color modal
+  document.getElementById('close-color-modal').addEventListener('click', closeColorModal);
+  document.getElementById('cancel-color-modal').addEventListener('click', closeColorModal);
+  document.getElementById('save-color-btn').addEventListener('click', saveStudentColor);
+  
+  // Color buttons
+  document.querySelectorAll('.color-modal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.color-modal-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('show');
+    });
+  });
+}
 
 // ═══════════════════════════════════════════════
 //  TABS
 // ═══════════════════════════════════════════════
-function switchSection(name, btn) {
+function switchSection(name) {
   document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  btn.classList.add('active');
+  
+  const tabMap = {
+    'assignments': 'tab-assignments',
+    'submissions': 'tab-submissions',
+    'students': 'tab-students'
+  };
+  
+  document.getElementById(tabMap[name]).classList.add('active');
   document.getElementById(`section-${name}`).classList.add('active');
 }
 
@@ -461,7 +537,8 @@ async function loadAssignments() {
 function renderAssignments() {
   const grid = document.getElementById('assignment-grid');
   if (!assignments.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><h3>No assignments yet</h3><p>Create your first assignment to get students coding.</p><button class="btn btn-primary" onclick="openAssignModal()">+ New Assignment</button></div>`;
+    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><h3>No assignments yet</h3><p>Create your first assignment to get students coding.</p><button class="btn btn-primary" id="empty-new-assignment-btn">+ New Assignment</button></div>`;
+    document.getElementById('empty-new-assignment-btn')?.addEventListener('click', () => openAssignModal());
     return;
   }
   grid.innerHTML = assignments.map(a => {
@@ -491,13 +568,42 @@ function renderAssignments() {
         </div>
       </div>
       <div class="assign-card-actions">
-        <button class="btn btn-sm" onclick="openAssignModal(${a.id})">✏️ Edit</button>
-        <button class="btn btn-sm" onclick="toggleVisibility(${a.id})">${a.visible ? '🙈 Hide' : '👁 Show'}</button>
-        <button class="btn btn-sm btn-blue" onclick="viewAssignmentSubs(${a.id})">📤 View Submissions (${subCount})</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteAssignment(${a.id})">🗑 Delete</button>
+        <button class="btn btn-sm edit-assign" data-id="${a.id}">✏️ Edit</button>
+        <button class="btn btn-sm toggle-visibility" data-id="${a.id}">${a.visible ? '🙈 Hide' : '👁 Show'}</button>
+        <button class="btn btn-sm btn-blue view-subs" data-id="${a.id}">📤 View Submissions (${subCount})</button>
+        <button class="btn btn-sm btn-danger delete-assign" data-id="${a.id}">🗑 Delete</button>
       </div>
     </div>`;
   }).join('');
+  
+  // Add event listeners to buttons
+  document.querySelectorAll('.edit-assign').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openAssignModal(parseInt(btn.dataset.id));
+    });
+  });
+  
+  document.querySelectorAll('.toggle-visibility').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleVisibility(parseInt(btn.dataset.id));
+    });
+  });
+  
+  document.querySelectorAll('.view-subs').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      viewAssignmentSubs(parseInt(btn.dataset.id));
+    });
+  });
+  
+  document.querySelectorAll('.delete-assign').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteAssignment(parseInt(btn.dataset.id));
+    });
+  });
 }
 
 function updateStats() {
@@ -616,10 +722,7 @@ function filterSubmissions() {
 
 function viewAssignmentSubs(assignId) {
   // Switch to submissions tab and filter by this assignment
-  document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelector('[onclick*="submissions"]').classList.add('active');
-  document.getElementById('section-submissions').classList.add('active');
+  switchSection('submissions');
   document.getElementById('submission-filter').value = String(assignId);
   filterSubmissions();
 }
@@ -669,9 +772,6 @@ async function loadStudents() {
   renderStudents();
   updateStats();
 }
-
-let studentSortField = 'last_name';
-let studentSortDir   = 1; // 1 = asc, -1 = desc
 
 function sortStudents(field) {
   if (studentSortField === field) {
@@ -730,21 +830,18 @@ function renderStudents() {
       ? '<span style="margin-left:4px;">↑</span>'
       : '<span style="margin-left:4px;">↓</span>';
   }
-  function th(field, label) {
-    return `<th style="cursor:pointer;user-select:none;" onclick="sortStudents('${field}')">${label}${thArrow(field)}</th>`;
-  }
 
   wrap.innerHTML = `
     <table class="student-table">
       <thead>
         <tr>
           <th>#</th>
-          ${th('last_name',         'Name')}
-          ${th('email',             'Email')}
-          ${th('color',             'Color')}
-          ${th('created_at',        'Registered')}
-          ${th('file_count',        'Files')}
-          ${th('submission_count',  'Subs')}
+          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('last_name')">Name${thArrow('last_name')}</th>
+          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('email')">Email${thArrow('email')}</th>
+          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('color')">Color${thArrow('color')}</th>
+          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('created_at')">Registered${thArrow('created_at')}</th>
+          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('file_count')">Files${thArrow('file_count')}</th>
+          <th style="cursor:pointer;user-select:none;" onclick="sortStudents('submission_count')">Subs${thArrow('submission_count')}</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -768,15 +865,34 @@ function renderStudents() {
             <td><span class="count-badge">${s.submission_count}</span></td>
             <td>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="btn btn-sm" onclick="openColorModal(${s.id}, '${escHtml(fullName)}', '${s.class_color || 'blue'}')">🎨 Color</button>
-                <button class="btn btn-sm" onclick="openResetModal(${s.id}, '${escHtml(s.username)}')">🔑 Reset PW</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id}, '${escHtml(s.username)}')">🗑 Remove</button>
+                <button class="btn btn-sm color-student" data-id="${s.id}" data-name="${escHtml(fullName)}" data-color="${s.class_color || 'blue'}">🎨 Color</button>
+                <button class="btn btn-sm reset-student" data-id="${s.id}" data-email="${escHtml(s.username)}">🔑 Reset PW</button>
+                <button class="btn btn-sm btn-danger delete-student" data-id="${s.id}" data-email="${escHtml(s.username)}">🗑 Remove</button>
               </div>
             </td>
           </tr>`;
         }).join('')}
       </tbody>
     </table>`;
+    
+  // Add event listeners to student action buttons
+  document.querySelectorAll('.color-student').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openColorModal(btn.dataset.id, btn.dataset.name, btn.dataset.color);
+    });
+  });
+  
+  document.querySelectorAll('.reset-student').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openResetModal(btn.dataset.id, btn.dataset.email);
+    });
+  });
+  
+  document.querySelectorAll('.delete-student').forEach(btn => {
+    btn.addEventListener('click', () => {
+      deleteStudent(btn.dataset.id, btn.dataset.email);
+    });
+  });
 }
 
 async function deleteStudent(id, email) {
@@ -825,13 +941,6 @@ async function saveStudentColor() {
   await loadStudents();
   toast('Class color updated!', 'success');
 }
-
-document.querySelectorAll('.color-modal-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.color-modal-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
 
 async function doResetPassword() {
   const id  = document.getElementById('reset-user-id').value;
@@ -910,13 +1019,9 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('reset-new-pw')?.addEventListener('keydown', e => { if (e.key === 'Enter') doResetPassword(); });
-});
+// Make functions available globally for onclick handlers
+window.sortStudents = sortStudents;
+window.toggleSubCode = toggleSubCode;
 </script>
 </body>
 </html>
