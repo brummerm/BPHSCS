@@ -61,7 +61,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── Session ───────────────────────────────────────────────────────────────────
 app.use(session({
   name:  'cls.sid',   // Non-default name prevents server fingerprinting
-  store: new SQLiteStore({ db: 'sessions.db', dir: process.env.DB_DIR || '.' }),
+  store: new SQLiteStore({ db: 'sessions.db', dir: '.' }),
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -393,7 +393,7 @@ app.get('/api/submissions/mine/:assignment_id', requireAuth, (req, res, next) =>
   try {
     const aid  = validateId(req.params.assignment_id, 'assignment_id');
     const subs = dataDb.prepare(
-      'SELECT id, assignment_id, language, note, submitted_at FROM submissions WHERE user_id=? AND assignment_id=? ORDER BY submitted_at DESC'
+      'SELECT id, assignment_id, code, language, note, submitted_at FROM submissions WHERE user_id=? AND assignment_id=? ORDER BY submitted_at DESC'
     ).all(req.session.userId, aid);
     res.json(subs);
   } catch (err) { next(err); }
