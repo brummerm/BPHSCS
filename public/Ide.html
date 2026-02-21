@@ -1057,7 +1057,7 @@ let assignments       = [];
 let hasSubmitted      = false;
 let lastSubmission    = null;
 
-const DEFAULT_PYTHON = `# Welcome to the Classroom IDE!\n# Write your code below and press Run (or Ctrl+Enter).\n\nname = input("What is your name? ")\nprint("Hello,", name + "!")\n\nfor i in range(1, 6):\n    print(f"  {i}. Nice to meet you!")\n`;
+const DEFAULT_PYTHON = `# Welcome to the Classroom IDE!`;
 const DEFAULT_HTML   = `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <style>\n    body { font-family: Arial; padding: 30px; background: #f5f5f5; }\n    h1   { color: #2563eb; }\n  </style>\n</head>\n<body>\n  <h1>Hello, World!</h1>\n  <p>Edit this HTML and press Preview.</p>\n</body>\n</html>`;
 
 // ═══════════════════════════════════════════════════════════════
@@ -1259,156 +1259,6 @@ function switchLang(lang) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  FILE MANAGEMENT
-// ═══════════════════════════════════════════════════════════════
-async function loadFiles() {
-  const res = await fetch('/api/files');
-  files = await res.json();
-  renderFileList();
-}
-
-function renderFileList() {
-  const list = document.getElementById('file-list');
-  if (!files.length) {
-    list.innerHTML = '<div class="empty-state">No files yet.<br>Create one below.</div>';
-    return;
-  }
-
-  list.innerHTML = files.map(f => {
-    const icon = f.language === 'html' ? '🌐' : '🐍';
-    const date = new Date(f.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const active = f.id === currentFileId ? 'active' : '';
-    return `
-      <div class="file-item ${active}" onclick="openFile(${f.id})">
-        <span class="file-icon">${icon}</span>
-        <div class="file-info">
-          <div class="file-name">${escHtml(f.filename)}</div>
-          <div class="file-meta">${date}</div>
-        </div>
-        <button class="file-del" onclick="deleteFile(event, ${f.id})" title="Delete">✕</button>
-      </div>`;
-  }).join('');
-}
-
-async function openFile(id) {
-  const res  = await fetch(`/api/files/${id}`);
-  const file = await res.json();
-  if (!res.ok) { toast('Could not load file.', 'error'); return; }
-
-  currentFileId = file.id;
-  currentFile   = file;
-  currentAssignmentId = null; // Clear assignment context
-  currentAssignmentTitle = '';
-
-  const lang = file.language || 'python';
-  switchLang(lang);
-  editor.setValue(file.content || '');
-  monaco.editor.setModelLanguage(editor.getModel(), lang === 'html' ? 'html' : 'python');
-
-  document.getElementById('current-file-label').textContent = file.filename;
-  setSaveStatus('saved');
-  document.getElementById('submit-btn').classList.add('hidden');
-  renderFileList();
-}
-
-async function createFile() {
-  const input = document.getElementById('new-filename-input');
-  let name = input.value.trim();
-  if (!name) return;
-
-  // Auto-add extension hint
-  const lang = currentLang;
-  if (!name.includes('.')) name += lang === 'html' ? '.html' : '.py';
-
-  const res  = await fetch('/api/files', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filename: name, language: lang, content: lang === 'python' ? DEFAULT_PYTHON : DEFAULT_HTML })
-  });
-  const data = await res.json();
-
-  if (!res.ok) { toast(data.error, 'error'); return; }
-  input.value = '';
-  await loadFiles();
-  openFile(data.id);
-  toast(`Created "${name}"`, 'success');
-}
-
-async function saveCurrentFile(silent = false) {
-  if (!editor) return;
-
-  // If working on an assignment (no file open), save progress instead
-  if (!currentFileId && currentAssignmentId) {
-    return saveAssignmentProgress(silent);
-  }
-
-  if (!currentFileId) return;
-
-  const res = await fetch('/api/files', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filename: currentFile.filename, language: currentLang, content: editor.getValue() })
-  });
-
-  if (res.ok) {
-    setSaveStatus('✓ Saved');
-    if (!silent) toast('Saved!', 'success');
-    await loadFiles();
-  } else {
-    setSaveStatus('✗ Save error');
-    if (!silent) toast('Save failed.', 'error');
-  }
-}
-
-async function saveAssignmentProgress(silent = false) {
-  if (!currentAssignmentId || !editor || userRole !== 'student') return;
-
-  try {
-    const res = await fetch(`/api/progress/${currentAssignmentId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: editor.getValue() })
-    });
-
-    if (res.ok) {
-      setSaveStatus('✓ Auto-saved');
-      if (!silent) toast('Progress saved!', 'success');
-    } else {
-      setSaveStatus('✗ Save error');
-      if (!silent) toast('Could not save progress.', 'error');
-    }
-  } catch (err) {
-    setSaveStatus('✗ Save error');
-    if (!silent) toast('Network error while saving.', 'error');
-  }
-}
-
-async function deleteFile(e, id) {
-  e.stopPropagation();
-  const file = files.find(f => f.id === id);
-  if (!confirm(`Delete "${file?.filename}"? This cannot be undone.`)) return;
-
-  await fetch(`/api/files/${id}`, { method: 'DELETE' });
-  if (currentFileId === id) {
-    currentFileId = null; currentFile = null;
-    editor.setValue(DEFAULT_PYTHON);
-    document.getElementById('current-file-label').textContent = 'unsaved';
-    setSaveStatus('');
-  }
-  await loadFiles();
-  toast('File deleted.', 'success');
-}
-
-function setSaveStatus(status) {
-  const el = document.getElementById('save-status');
-  el.textContent = status;
-  el.className = 'save-status';
-  if (status === '✓ Saved' || status === '✓ Auto-saved') {
-    el.classList.add('saved');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
 //  ASSIGNMENTS
 // ═══════════════════════════════════════════════════════════════
 async function loadAssignments() {
@@ -1427,35 +1277,60 @@ function renderAssignments() {
   }
   
   // For students, also load submission status
-  const loadStatus = userRole === 'student' ? loadSubmissionStatusForAssignments() : Promise.resolve();
-  
-  loadStatus.then(() => {
-    list.innerHTML = visible.map(a => {
-      const hiddenBadge = (!a.visible && userRole === 'teacher') ? '<span class="assign-hidden-badge">hidden</span>' : '';
-      let statusBadge = '';
-      if (userRole === 'student') {
-        if (a.submitted) {
-          statusBadge = '<span class="status-submitted">✓ Submitted</span>';
-        } else if (a.in_progress) {
-          statusBadge = '<span class="status-in-progress">● In Progress</span>';
-        } else {
-          statusBadge = '<span class="status-not-started">○ Not Started</span>';
-        }
+  if (userRole === 'student') {
+    loadSubmissionStatusForAssignments().then(() => {
+      renderAssignmentList(visible, list);
+    });
+  } else {
+    renderAssignmentList(visible, list);
+  }
+}
+
+function renderAssignmentList(visible, list) {
+  list.innerHTML = visible.map(a => {
+    const hiddenBadge = (!a.visible && userRole === 'teacher') ? '<span class="assign-hidden-badge">hidden</span>' : '';
+    let statusBadge = '';
+    if (userRole === 'student') {
+      if (a.submitted) {
+        statusBadge = '<span class="status-submitted">✓ Submitted</span>';
+      } else if (a.in_progress) {
+        statusBadge = '<span class="status-in-progress">● In Progress</span>';
+      } else {
+        statusBadge = '<span class="status-not-started">○ Not Started</span>';
       }
-      return `
-        <div class="assign-item" onclick="loadAssignment(${a.id})">
-          <div class="assign-top">
-            <span class="assign-title">${escHtml(a.title)}</span>
-            ${hiddenBadge}
-            <span class="assign-lang ${a.language}">${a.language}</span>
-          </div>
-          ${a.description ? `<div class="assign-desc">${escHtml(a.description)}</div>` : ''}
-          <div class="assign-actions" style="justify-content:space-between;">
-            <div class="assignment-status">${statusBadge}</div>
-            <button class="btn-sm" onclick="loadAssignment(${a.id}); event.stopPropagation();">Open →</button>
-          </div>
-        </div>`;
-    }).join('');
+    }
+    return `
+      <div class="assign-item" data-id="${a.id}">
+        <div class="assign-top">
+          <span class="assign-title">${escHtml(a.title)}</span>
+          ${hiddenBadge}
+          <span class="assign-lang ${a.language}">${a.language}</span>
+        </div>
+        ${a.description ? `<div class="assign-desc">${escHtml(a.description)}</div>` : ''}
+        <div class="assign-actions" style="justify-content:space-between;">
+          <div class="assignment-status">${statusBadge}</div>
+          <button class="btn-sm open-assign-btn" data-id="${a.id}">Open →</button>
+        </div>
+      </div>`;
+  }).join('');
+  
+  // Add event listeners to the newly created elements
+  document.querySelectorAll('.assign-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      // Don't trigger if clicking the button
+      if (!e.target.classList.contains('open-assign-btn')) {
+        const id = item.dataset.id;
+        if (id) loadAssignment(parseInt(id));
+      }
+    });
+  });
+  
+  document.querySelectorAll('.open-assign-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (id) loadAssignment(parseInt(id));
+    });
   });
 }
 
@@ -1499,7 +1374,7 @@ function renderTeacherAssignments() {
     return;
   }
   list.innerHTML = assignments.map(a => `
-    <div class="assign-item">
+    <div class="assign-item" data-id="${a.id}">
       <div class="assign-top">
         <span class="assign-title">${escHtml(a.title)}</span>
         ${!a.visible ? '<span class="assign-hidden-badge">hidden</span>' : ''}
@@ -1507,11 +1382,36 @@ function renderTeacherAssignments() {
       </div>
       ${a.description ? `<div class="assign-desc">${escHtml(a.description)}</div>` : ''}
       <div class="assign-actions">
-        <button class="btn-sm" onclick="editAssignment(${a.id})">Edit</button>
-        <button class="btn-sm" onclick="toggleAssignVisibility(${a.id})">${a.visible ? 'Hide' : 'Show'}</button>
-        <button class="btn-sm danger" onclick="deleteAssignment(${a.id})">Delete</button>
+        <button class="btn-sm edit-assign-btn" data-id="${a.id}">Edit</button>
+        <button class="btn-sm toggle-visibility-btn" data-id="${a.id}">${a.visible ? 'Hide' : 'Show'}</button>
+        <button class="btn-sm danger delete-assign-btn" data-id="${a.id}">Delete</button>
       </div>
     </div>`).join('');
+    
+  // Add event listeners to teacher assignment buttons
+  document.querySelectorAll('.edit-assign-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (id) openAssignmentModal(parseInt(id));
+    });
+  });
+  
+  document.querySelectorAll('.toggle-visibility-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (id) toggleAssignVisibility(parseInt(id));
+    });
+  });
+  
+  document.querySelectorAll('.delete-assign-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (id) deleteAssignment(parseInt(id));
+    });
+  });
 }
 
 async function loadAssignment(id) {
@@ -1618,10 +1518,6 @@ async function saveAssignment() {
   closeAssignmentModal();
   await loadAssignments();
   toast(editId ? 'Assignment updated!' : 'Assignment created!', 'success');
-}
-
-function editAssignment(id) {
-  openAssignmentModal(id);
 }
 
 async function toggleAssignVisibility(id) {
@@ -1765,6 +1661,152 @@ function handleTerminalInput(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ line })
     });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FILE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+async function loadFiles() {
+  const res = await fetch('/api/files');
+  files = await res.json();
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  if (!files.length) {
+    list.innerHTML = '<div class="empty-state">No files yet.<br>Create one below.</div>';
+    return;
+  }
+
+  list.innerHTML = files.map(f => {
+    const icon = f.language === 'html' ? '🌐' : '🐍';
+    const date = new Date(f.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const active = f.id === currentFileId ? 'active' : '';
+    return `
+      <div class="file-item ${active}" data-id="${f.id}">
+        <span class="file-icon">${icon}</span>
+        <div class="file-info">
+          <div class="file-name">${escHtml(f.filename)}</div>
+          <div class="file-meta">${date}</div>
+        </div>
+        <button class="file-del" data-id="${f.id}" title="Delete">✕</button>
+      </div>`;
+  }).join('');
+  
+  // Add event listeners to file items
+  document.querySelectorAll('.file-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      // Don't trigger if clicking delete button
+      if (!e.target.classList.contains('file-del')) {
+        const id = item.dataset.id;
+        if (id) openFile(parseInt(id));
+      }
+    });
+  });
+  
+  document.querySelectorAll('.file-del').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (id) deleteFile(e, parseInt(id));
+    });
+  });
+}
+
+async function openFile(id) {
+  const res  = await fetch(`/api/files/${id}`);
+  const file = await res.json();
+  if (!res.ok) { toast('Could not load file.', 'error'); return; }
+
+  currentFileId = file.id;
+  currentFile   = file;
+  currentAssignmentId = null; // Clear assignment context
+  currentAssignmentTitle = '';
+
+  const lang = file.language || 'python';
+  switchLang(lang);
+  editor.setValue(file.content || '');
+  monaco.editor.setModelLanguage(editor.getModel(), lang === 'html' ? 'html' : 'python');
+
+  document.getElementById('current-file-label').textContent = file.filename;
+  setSaveStatus('saved');
+  document.getElementById('submit-btn').classList.add('hidden');
+  renderFileList();
+}
+
+async function saveCurrentFile(silent = false) {
+  if (!editor) return;
+
+  // If working on an assignment (no file open), save progress instead
+  if (!currentFileId && currentAssignmentId) {
+    return saveAssignmentProgress(silent);
+  }
+
+  if (!currentFileId) return;
+
+  const res = await fetch('/api/files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename: currentFile.filename, language: currentLang, content: editor.getValue() })
+  });
+
+  if (res.ok) {
+    setSaveStatus('✓ Saved');
+    if (!silent) toast('Saved!', 'success');
+    await loadFiles();
+  } else {
+    setSaveStatus('✗ Save error');
+    if (!silent) toast('Save failed.', 'error');
+  }
+}
+
+async function saveAssignmentProgress(silent = false) {
+  if (!currentAssignmentId || !editor || userRole !== 'student') return;
+
+  try {
+    const res = await fetch(`/api/progress/${currentAssignmentId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: editor.getValue() })
+    });
+
+    if (res.ok) {
+      setSaveStatus('✓ Auto-saved');
+      if (!silent) toast('Progress saved!', 'success');
+    } else {
+      setSaveStatus('✗ Save error');
+      if (!silent) toast('Could not save progress.', 'error');
+    }
+  } catch (err) {
+    setSaveStatus('✗ Save error');
+    if (!silent) toast('Network error while saving.', 'error');
+  }
+}
+
+async function deleteFile(e, id) {
+  e.stopPropagation();
+  const file = files.find(f => f.id === id);
+  if (!confirm(`Delete "${file?.filename}"? This cannot be undone.`)) return;
+
+  await fetch(`/api/files/${id}`, { method: 'DELETE' });
+  if (currentFileId === id) {
+    currentFileId = null; currentFile = null;
+    editor.setValue(DEFAULT_PYTHON);
+    document.getElementById('current-file-label').textContent = 'unsaved';
+    setSaveStatus('');
+  }
+  await loadFiles();
+  toast('File deleted.', 'success');
+}
+
+function setSaveStatus(status) {
+  const el = document.getElementById('save-status');
+  el.textContent = status;
+  el.className = 'save-status';
+  if (status === '✓ Saved' || status === '✓ Auto-saved') {
+    el.classList.add('saved');
   }
 }
 
@@ -1913,7 +1955,7 @@ async function loadSubmissionsForAssignment() {
   list.innerHTML = subs.map(s => {
     const date = new Date(s.submitted_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     return `
-      <div class="sub-item" onclick="viewSubmission(${s.id})">
+      <div class="sub-item" data-id="${s.id}">
         <div class="sub-item-top">
           <span class="sub-student">👤 ${escHtml(s.username)}</span>
           <span class="sub-time">${date}</span>
@@ -1921,6 +1963,14 @@ async function loadSubmissionsForAssignment() {
         ${s.note ? `<div class="sub-note">💬 ${escHtml(s.note)}</div>` : ''}
       </div>`;
   }).join('');
+  
+  // Add event listeners to submission items
+  document.querySelectorAll('.sub-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const id = item.dataset.id;
+      if (id) viewSubmission(parseInt(id));
+    });
+  });
 }
 
 async function viewSubmission(id) {
@@ -1976,7 +2026,7 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Make functions available globally for onclick handlers
+// Make functions available globally for any remaining onclick handlers
 window.switchLang = switchLang;
 window.switchSideTab = switchSideTab;
 window.openPasswordModal = openPasswordModal;
