@@ -1,12 +1,18 @@
 const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
+const path = require('path');
 
 // ── Two separate databases ──────────────────────────────────────────────────
 // auth.db  → user accounts only (credentials, roles)
 // data.db  → files, assignments, submissions (all class data)
+//
+// DB_DIR is set to /data on Render (persistent disk) via environment variable.
+// Falls back to '.' for local development.
 
-const authDb = new Database('auth.db');
-const dataDb = new Database('data.db');
+const DB_DIR = process.env.DB_DIR || '.';
+
+const authDb = new Database(path.join(DB_DIR, 'auth.db'));
+const dataDb = new Database(path.join(DB_DIR, 'data.db'));
 
 authDb.pragma('journal_mode = WAL');
 dataDb.pragma('journal_mode = WAL');
