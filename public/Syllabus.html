@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Syllabus – Computer Science</title>
+  <!-- cloudflare email obfuscation breaks inline scripts — disable via page rule or use data-cfasync="false" -->
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -77,7 +78,7 @@
     </div>
 
     <div class="section open" id="s1">
-      <div class="section-header" onclick="toggle('s1')">
+      <div class="section-header">
         <h2>Course Description</h2>
         <span class="chevron">›</span>
       </div>
@@ -88,7 +89,7 @@
     </div>
 
     <div class="section" id="s2">
-      <div class="section-header" onclick="toggle('s2')">
+      <div class="section-header">
         <h2>Required Materials</h2>
         <span class="chevron">›</span>
       </div>
@@ -101,7 +102,7 @@
     </div>
 
     <div class="section" id="s3">
-      <div class="section-header" onclick="toggle('s3')">
+      <div class="section-header">
         <h2>Educational Goals &amp; Outcomes</h2>
         <span class="chevron">›</span>
       </div>
@@ -143,7 +144,7 @@
     </div>
 
     <div class="section" id="s4">
-      <div class="section-header" onclick="toggle('s4')">
+      <div class="section-header">
         <h2>Academic Integrity Policy</h2>
         <span class="chevron">›</span>
       </div>
@@ -163,7 +164,7 @@
     </div>
 
     <div class="section" id="s5">
-      <div class="section-header" onclick="toggle('s5')">
+      <div class="section-header">
         <h2>Classroom Expectations</h2>
         <span class="chevron">›</span>
       </div>
@@ -177,7 +178,7 @@
     </div>
 
     <div class="section" id="s6">
-      <div class="section-header" onclick="toggle('s6')">
+      <div class="section-header">
         <h2>Grading</h2>
         <span class="chevron">›</span>
       </div>
@@ -196,13 +197,20 @@
     <p>Instructor: Mr. Brummer &nbsp;·&nbsp; <a href="mailto:mbrummer@schools.nyc.gov">mbrummer@schools.nyc.gov</a></p>
     <p style="margin-top:0.4rem">&copy; <span id="yr"></span> Computer Science</p>
   </footer>
+
   <script>
     document.getElementById('yr').textContent = new Date().getFullYear();
-    function toggle(id) {
-      document.getElementById(id).classList.toggle('open');
-    }
+
+    // Use addEventListener instead of onclick to avoid CSP script-src-attr restrictions
+    // and Cloudflare script injection interference
+    document.querySelectorAll('.section-header').forEach(function(header) {
+      header.addEventListener('click', function() {
+        this.closest('.section').classList.toggle('open');
+      });
+    });
+
     const page = location.pathname.split('/').pop() || 'index.html';
-    document.querySelectorAll('nav a:not(.ide-link)').forEach(a => {
+    document.querySelectorAll('nav a:not(.ide-link)').forEach(function(a) {
       if (a.getAttribute('href') === page) a.classList.add('active');
       else a.classList.remove('active');
     });
