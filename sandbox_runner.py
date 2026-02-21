@@ -22,6 +22,33 @@ try:
 except (ImportError, ValueError, AttributeError):
     pass
 
+# ── Pre-import modules we'll need AFTER the blocklist is installed ────────────
+# These must be imported NOW, before _safe_import replaces builtins.__import__,
+# because they (or their transitive deps) are in the blocked list.
+#
+#   traceback  → imports codeop  (codeop is blocked → error handler would crash)
+#   importlib.util → needed to load turtle_capture.py
+import traceback as _traceback
+import importlib.util as _ilu
+import os.path as _osp
+
+# ── Inject turtle_capture mock ────────────────────────────────────────────────
+# Must happen BEFORE _safe_import is installed (we need importlib, which is
+# blocked for student code).  We also save a reference to real stdout here so
+# turtle_capture can write its canvas-data marker line through the unwrapped
+# stream later.
+_turtle_capture = None
+try:
+    _tc_path = _osp.join(_osp.dirname(_osp.abspath(__file__)), 'turtle_capture.py')
+    if _osp.exists(_tc_path):
+        _spec = _ilu.spec_from_file_location('turtle_capture', _tc_path)
+        _turtle_capture = _ilu.module_from_spec(_spec)
+        _turtle_capture._REAL_OUT = sys.stdout   # before stdout wrapping below
+        _spec.loader.exec_module(_turtle_capture)
+        sys.modules['turtle'] = _turtle_capture
+except Exception as _e:
+    pass  # if anything goes wrong, 'turtle' stays unavailable
+
 # ── Block dangerous module imports ────────────────────────────────────────────
 _BLOCKED = frozenset({
     # Process spawning / shell access
@@ -42,17 +69,18 @@ _BLOCKED = frozenset({
     'fcntl', 'grp', 'pwd', 'termios',
     # Unsafe serialisation
     'pickle', 'pickletools', 'shelve', 'marshal',
-    # Import machinery (used to bypass blocklists)
+    # Import machinery (blocked for student code only — we used it above already)
     'importlib', 'importlib.util', 'importlib.machinery',
     'pkgutil', 'zipimport',
-    # Interactive / debugger
-    'code', 'codeop', 'pdb', 'bdb', 'trace', 'tracemalloc',
+    # Debugger / interactive
+    # NOTE: 'codeop' and 'traceback' are intentionally NOT listed here.
+    # traceback imports codeop; we need traceback in the error handler below.
+    'pdb', 'bdb', 'trace', 'tracemalloc',
     # GUI toolkits that require a display server
     'tkinter', 'tkinter.ttk', 'tkinter.messagebox',
     'wx', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6',
     'gi', 'gi.repository',
-    # NOTE: 'turtle' is intentionally NOT listed here.
-    # It is intercepted below by injecting our turtle_capture mock.
+    # NOTE: 'turtle' is intentionally NOT listed — it's intercepted above.
     'webbrowser',
     # Windows-specific
     'winreg', 'winsound', 'msvcrt',
@@ -92,30 +120,7 @@ def _make_safe_os():
     })
     return safe
 
-import os as _real_os
 sys.modules['os'] = _make_safe_os()
-
-# ── Inject turtle_capture mock ────────────────────────────────────────────────
-# We inject BEFORE wrapping stdout so the mock can save a reference
-# to the real stdout for writing its canvas-data marker line.
-_turtle_capture = None
-try:
-    import importlib.util as _ilu
-    import os.path as _osp
-    _tc_path = _osp.join(_osp.dirname(_osp.abspath(__file__)), 'turtle_capture.py')
-    if _osp.exists(_tc_path):
-        _spec = _ilu.spec_from_file_location('turtle_capture', _tc_path)
-        _turtle_capture = _ilu.module_from_spec(_spec)
-        # Temporarily restore real import so turtle_capture can import math/json
-        builtins.__import__ = _real_import
-        _spec.loader.exec_module(_turtle_capture)
-        builtins.__import__ = _safe_import
-        # Give the mock a handle to real stdout before we wrap it
-        _turtle_capture._REAL_OUT = sys.stdout
-        # Inject as 'turtle' so `import turtle` in student code uses our mock
-        sys.modules['turtle'] = _turtle_capture
-except Exception:
-    pass  # If anything goes wrong, turtle remains unresolvable
 
 # ── Output size limit ─────────────────────────────────────────────────────────
 _MAX_OUTPUT_BYTES = 100 * 1024
@@ -180,8 +185,8 @@ try:
 except SystemExit:
     pass
 except Exception:
-    import traceback
-    tb_lines = traceback.format_exc().splitlines()
+    # _traceback was imported before the blocklist was installed, so this works
+    tb_lines = _traceback.format_exc().splitlines()
     filtered = [
         line for line in tb_lines
         if 'sandbox_runner' not in line and '<frozen' not in line
@@ -189,7 +194,7 @@ except Exception:
     print('\n'.join(filtered), file=sys.stderr)
     sys.exit(1)
 finally:
-    # After exec, emit any captured turtle canvas data
+    # Emit any captured turtle canvas data after execution
     if _turtle_capture is not None:
         try:
             _turtle_capture._output_canvas()
